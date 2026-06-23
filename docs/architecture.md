@@ -54,3 +54,18 @@ Each worker reports:
 - Fair scheduling
 - GPU topology awareness
 - NUMA awareness
+
+## Architecture Diagram
+
+```mermaid
+graph TD
+    C[Client] -->|submit job| S[Scheduler]
+
+    S -->|assign job| W1[Worker 1]
+    S -->|assign job| W2[Worker 2]
+
+    W1 -->|heartbeat| S
+    W2 -->|heartbeat| S
+
+    S -->|track status| DB[(Job / Worker State)]
+```
