@@ -31,6 +31,15 @@ Hearbeats
 
 Failure recovery
 
+## Phase 6.5:
+
+Testing and Refactoring
+
+- Stress tests
+- Failure tests
+- Clean architecture
+- Remove technical debt
+
 ## Phase 7:
 
 Metrics and benchmarking
