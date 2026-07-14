@@ -65,8 +65,9 @@ class Worker {
     connectToScheduler()
     */
 
-    // Identity parameters
     private:
+
+    // Identity parameters
     std::string workerID;
     std::string hostName;
     std::string IPAddress;
