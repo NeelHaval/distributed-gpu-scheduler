@@ -41,7 +41,7 @@ class Job {
     static Job deserialize(const std::string data);
 
     // Job status update
-    void updateStatus(JobState newState);
+    void updateState(JobState newStateJ);
 
     // Mark failed in case of worker crash or timeout
     void markFailed();
