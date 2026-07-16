@@ -55,6 +55,11 @@ Each worker reports:
 - GPU topology awareness
 - NUMA awareness
 
+### Future serialization methods:
+- Protocol Buffers (Google Protobuf)
+- FlatBuffers
+- Cap'n Proto
+
 ## Architecture Diagram
 
 ```mermaid

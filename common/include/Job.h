@@ -33,14 +33,14 @@ class Job {
     public:
     
     // Constructor
-    Job(std::string jobID, int requiredGPUs, size_t requiredMem, 
-    std::string payload, JobPriority priority = JobPriority::Normal);
+    Job(const std::string& jobID, int requiredGPUs, size_t requiredMem, int requiredCPUs,
+    const std::string& payload, JobPriority priority = JobPriority::Normal);
 
     // Serialize/Deserialize needed for RPC, networking and logging
     std::string serialize() const;
-    static Job deserialize(const std::string data);
+    static Job deserialize(const std::string& data);
 
-    // Job status update
+    // Job state update
     void updateState(JobState newStateJ);
 
     // Mark failed in case of worker crash or timeout
@@ -52,7 +52,7 @@ class Job {
     // Accessible through class only variables for Jobs
     private:
     std::string jobID;
-    std::chrono::time_point<std::chrono::system_clock> submitTime;
+    std::chrono::steady_clock::time_point submissionTime;
     int requiredGPUs;
     int requiredCPUs;
     size_t requiredMem;
@@ -60,7 +60,8 @@ class Job {
     std::string payload;
     int expectedDuration;
     JobPriority priority;
-    JobState status;
+    JobState state;
     int retryCount;
+    std::chrono::steady_clock::time_point duration;
 
 };
