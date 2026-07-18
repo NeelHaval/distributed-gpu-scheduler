@@ -17,9 +17,10 @@ Job::Job(const std::string& jobID, int requiredGPUs, size_t requiredMem, int req
     requiredCPUs(requiredCPUs),
     payload(payload),
     priority(priority),
-    state(JobState :: Submitted),
+    state(JobState::Submitted),
     retryCount(0),
-    expectedDuration(0)
+    expectedDuration(0),
+    workerID("")
 
     {
 
@@ -120,5 +121,42 @@ Job Job::deserialize(const std::string& data) {
 
     // Return packaged job object
     return job;
+
+}
+
+// Getters
+
+// JobID getter
+std::string Job::getJobID() const {
+
+    return jobID;
+
+}
+
+// Get required CPUs
+int Job::getRequiredCPUs() const {
+
+    return requiredCPUs;
+
+}
+
+// Get requiredGPUs
+int Job::getRequiredGPUs() const {
+
+    return requiredGPUs;
+
+}
+
+// Get requiredMem
+int Job::getRequiredMem() const {
+
+    return requiredMem;
+
+}
+
+// Assign worker ID to job
+void Job::assignWorker(const std::string& data) {
+
+    workerID = data;
 
 }

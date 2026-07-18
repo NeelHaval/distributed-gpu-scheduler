@@ -18,7 +18,7 @@ class Worker {
     public:
 
     // Constructor
-    Worker(std::string workerID, int totalCPUs, int totalGPUs, int totalMem);
+    Worker(const std::string& workerID, int totalCPUs, int totalGPUs, size_t totalMem);
 
     // Required Methods:
 
@@ -26,22 +26,22 @@ class Worker {
     void registerWorker();
 
     // Worker executes job
-    void executeJob(const Job& job);
+    bool executeJob(Job& job);
 
     // Worker completes job
-    void completeJob(const Job& job);
+    bool completeJob(Job& job);
 
     // Update worker state
     void updateState(WorkerState newStateW);
 
     // Verify existence of resources
-    bool checkResources(int requiredCPUs, int requiredGPUs, int requiredMem);
+    bool checkResources(int requiredCPUs, int requiredGPUs, size_t requiredMem);
 
     // Reserve resources
-    void assignResources(int requiredCPUs, int requiredGPUs, int requiredMem);
+    void assignResources(int requiredCPUs, int requiredGPUs, size_t requiredMem);
 
     // Free resources
-    void freeResources(int requiredCPUs, int requiredGPUs, int requiredMem);
+    void freeResources(int requiredCPUs, int requiredGPUs, size_t requiredMem);
 
     // Worker id
     std::string getWorkerID() const;
@@ -81,17 +81,20 @@ class Worker {
     int availableCPUs;
     int totalGPUs;
     int availableGPUs;
-    int totalMem;
-    int availableMem;
+    size_t totalMem;
+    size_t availableMem;
 
     // State
     WorkerState state;
 
     // Last Heartbeat
-    std::chrono::time_point<std::chrono::system_clock> lastHeartbeat;
+    std::chrono::time_point<std::chrono::steady_clock> lastHeartbeat;
 
     // Statics
     int jobsCompleted;
+
+    // Phase 6:
+    // Increment when a job fails during execution.
     int jobsFailed;
     
     // Note that jobs executed is jobs failed + jobs completed

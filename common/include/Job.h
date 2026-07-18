@@ -44,10 +44,24 @@ class Job {
     void updateState(JobState newStateJ);
 
     // Mark failed in case of worker crash or timeout
+    // Note it is the scheduler which calls this method as only it has authority
     void markFailed();
 
     // Mark complete in case of clean termination path
     void markCompleted();
+
+    // Getters and setters
+
+    // JobID getter
+    std::string getJobID() const;
+
+    // Resources getter
+    int getRequiredCPUs() const;
+    int getRequiredGPUs() const;
+    int getRequiredMem() const;
+
+    // Assign worker to job
+    void assignWorker(const std::string& data);
 
     // Accessible through class only variables for Jobs
     private:
