@@ -46,6 +46,9 @@ class Worker {
     // Worker id
     std::string getWorkerID() const;
 
+    // Current jobID
+    std::string getCurrentJobID() const;
+
     // Available CPU resources
     int getAvailableCPUs() const;
 

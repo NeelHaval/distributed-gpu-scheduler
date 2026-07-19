@@ -72,28 +72,20 @@ bool Worker::executeJob(Job& job) {
     // Worker becomes busy
     updateState(WorkerState::Busy);
 
-    // Run job - note that this may have to change later as project networks
-    // more i.e. enter Queued and scheduling states
-    job.updateState(JobState::Running);
-
     // Job allocation successful
     return true;
 
 }
 
 // Complete job - for phase 1 could end up in partially updated state if exception thrown
+// May not need entire job object for paramter in future
 bool Worker::completeJob(Job& job) {
 
-    if (state != WorkerState::Busy) {
+    if (currentJobID != job.getJobID()) {
 
         return false;
 
     }
-
-    // Complete job - note that this may have to change later as project networks
-    // more i.e. enter Queued and scheduling states
-    // May need to move this line into Scheduler in later phases as that should mark complete
-    job.updateState(JobState::Completed);
 
     // Free resources
     freeResources(job.getRequiredCPUs(), job.getRequiredGPUs(), job.getRequiredMem());
@@ -154,6 +146,13 @@ void Worker::updateState(WorkerState newStateW) {
 std::string Worker::getWorkerID() const {
 
     return workerID;
+
+}
+
+// Current jobID
+std::string Worker::getCurrentJobID() const {
+
+    return currentJobID;
 
 }
 

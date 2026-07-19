@@ -22,7 +22,7 @@ class Scheduler {
     void schedule();
 
     // Mark a job complete
-    void completeJob(const std::string& jobID);
+    bool completeJob(const std::string& jobID);
 
     // Recover failed jobs
     void failJob(const std::string& jobID);
@@ -31,7 +31,7 @@ class Scheduler {
     Worker* findAvailableWorker(const Job& job);
 
     // Required for testing
-    int queueSize() const;
+    size_t queueSize() const;
     int workerCount() const;
 
     private:
@@ -49,9 +49,9 @@ class Scheduler {
     std::unordered_map<std::string, Job> completedJobs;
 
     // Statistics
-    int jobsSubmitted;
-    int jobsCompleted;
-    int workersRegistered;
-    int jobsFailed;
+    size_t jobsSubmitted;
+    size_t jobsCompleted;
+    size_t workersRegistered;
+    size_t jobsFailed;
 
 };

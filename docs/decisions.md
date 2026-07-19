@@ -19,7 +19,96 @@ performance.
 
 - Workers do not own Job objects. The scheduler maintains job ownership and workers maintain execution state and resource availability.
 
-Ongoing decisions:
+## 19/07/2026
+
+### Why does the Scheduler copy submitted jobs?
+
+When a client submits a job, the scheduler creates and stores its own copy rather than modifying the client's original object.
+
+**Reasons:**
+- **Clear ownership:** Once submitted, the scheduler owns the job lifecycle.
+- **Avoid shared mutable state:** The client and scheduler should not both modify the same `Job` instance, as this can lead to inconsistent state and bugs.
+- **Closer to a real distributed system:** In later phases, jobs will be transmitted over the network, meaning the scheduler naturally receives a serialized copy rather than the original object.
+
+This allows the scheduler to safely update the job's state (e.g., `Queued`, `Running`, `Completed`) without affecting the client's original copy.
+
+## Resource Allocation and Future Thread Safety
+
+### Current Phase 1 Approach
+
+Currently, resource allocation is handled using a defensive two-stage validation process:
+
+1. The Scheduler searches for a Worker with sufficient available resources.
+2. The Worker performs its own resource check before accepting the job.
+3. Only after validation does the Worker reserve the required resources.
+
+This prevents invalid allocations caused by stale scheduler information and ensures that the Worker remains the final authority over its own resource state.
+
+However, this approach does **not completely prevent race conditions** in a multi-threaded environment because the resource check and resource assignment are separate operations.
+
+Example:
+
+- Thread 1:
+Check available CPUs -> enough resources
+
+- Context switch
+
+- Thread 2:
+Allocate resources
+
+- Context switch
+
+- Thread 1:
+Allocate resources using outdated information
+
+
+This can lead to inconsistent resource tracking.
+
+---
+
+### Future Improvement: Mutex-Based Resource Reservation
+
+When the scheduler becomes multi-threaded, resource allocation should be made atomic using a mutex.
+
+A **mutex** (mutual exclusion lock) is a synchronisation mechanism that allows only one thread to access a protected section of code at a time.
+
+For resource allocation, the Worker would:
+
+1. Acquire the mutex lock.
+2. Check available resources.
+3. Reserve resources if available.
+4. Release the mutex lock.
+
+Example:
+
+- Acquire lock
+
+- Check resources
+
+- Assign resources
+
+- Release lock
+
+
+This ensures that no other thread can modify the Worker resources between the check and assignment operations.
+
+The future goal is to replace the current:
+
+- checkResources()
+- assignResources()
+
+pattern with an atomic:
+
+- reserveResources()
+
+
+operation protected by a mutex.
+
+This provides safe concurrent scheduling while preserving the current separation of responsibilities:
+- Scheduler decides job placement.
+- Worker validates and protects its own resources.
+
+## Ongoing decisions:
 
 - C++ networking library?
 - HTTP vs gRPC?
