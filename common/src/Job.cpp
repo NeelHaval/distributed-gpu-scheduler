@@ -133,6 +133,20 @@ std::string Job::getJobID() const {
 
 }
 
+// Job state getter
+JobState Job::getState() const {
+
+    return state;
+
+}
+
+// Worker ID getter for this job
+std::string Job::getWorkerID() const {
+
+    return workerID;
+
+}
+
 // Get required CPUs
 int Job::getRequiredCPUs() const {
 

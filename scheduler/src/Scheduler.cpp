@@ -25,6 +25,11 @@ void Scheduler::registerWorker(const Worker& worker) {
         workersRegistered++;
 
     }
+    
+    // Note that this method is strictly a phase 1 implementation.
+    // It does not handle the possibility of duplicate workers which becomes
+    // a real concern in later phases. Therefore, find mechanism to deal with
+    // duplicate workers.
 
 }
 
@@ -49,20 +54,20 @@ void Scheduler::submitJob(const Job& job) {
 bool Scheduler::completeJob(const std::string& jobID) {
 
     // Find appropriate job in running jobs
-    auto it = runningJobs.find(jobID);
+    auto jobIt = runningJobs.find(jobID);
 
     // If job does not exist return
-    if (it == runningJobs.end()) {
+    if (jobIt == runningJobs.end()) {
 
         return false;
 
     }
 
     // Mark this job completed
-    it->second.markCompleted();
+    jobIt->second.markCompleted();
 
     // Move this job completed jobs
-    auto result = completedJobs.emplace(jobID, it->second);
+    auto result = completedJobs.emplace(jobID, jobIt->second);
 
     if (!result.second) {
 
@@ -70,8 +75,21 @@ bool Scheduler::completeJob(const std::string& jobID) {
         
     }
 
+    // Retrieve the worker object which is running this job
+    auto workerIt = registeredWorkers.find(jobIt->second.getWorkerID());
+
+    // Error in workerID book keeping
+    if (workerIt == registeredWorkers.end()) {
+
+        return false;
+        
+    }
+
+    // Call on worker class completeJob method
+    workerIt->second.completeJob(jobIt->second);
+
     // Remove this job from running jobs
-    runningJobs.erase(it);
+    runningJobs.erase(jobIt);
 
     // Update jobs completed
     jobsCompleted++;

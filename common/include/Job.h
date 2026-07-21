@@ -1,3 +1,4 @@
+#pragma once
 #include <string>
 #include <chrono>
 
@@ -55,10 +56,16 @@ class Job {
     // JobID getter
     std::string getJobID() const;
 
+    // Job state getter
+    JobState getState() const;
+
     // Resources getter
     int getRequiredCPUs() const;
     int getRequiredGPUs() const;
     int getRequiredMem() const;
+
+    // Get current workerID
+    std::string getWorkerID() const;
 
     // Assign worker to job
     void assignWorker(const std::string& data);
