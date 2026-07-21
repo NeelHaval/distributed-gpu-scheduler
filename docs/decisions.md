@@ -105,8 +105,60 @@ pattern with an atomic:
 operation protected by a mutex.
 
 This provides safe concurrent scheduling while preserving the current separation of responsibilities:
-- Scheduler decides job placement.
-- Worker validates and protects its own resources.
+- Scheduler decides job placement
+- Worker validates and protects its own resources
+
+## 21/07/2026
+
+### Decision: Adopt GoogleTest for unit testing
+
+Context:<br>
+The scheduler consists of multiple C++ components (`Job`, `Worker`, and `Scheduler`) which will become increasingly complex as networking and fault tolerance are introduced.
+
+Decision:<br>
+GoogleTest was selected as the unit testing framework.
+
+Reasons:<br>
+- Native C++ support
+- Industry-standard framework
+- Integrates with CMake and CTest
+- Provides a foundation for future mocking and integration testing
+
+### Consequences
+
+**Positive:**
+- Automated regression testing
+- Consistent testing workflow
+- Easy integration into future CI/CD pipelines
+
+**Negative:**
+- Adds an external dependency
+
+---
+
+### Decision: Test components independently before distributed integration
+
+Context:<br>
+The system will eventually include distributed behaviour such as networking, worker failures, and job recovery. These features introduce more complex failure modes.
+
+Initial testing focuses on deterministic unit tests for individual components.
+
+Current tests validate:
+- Job state transitions
+- Worker resource allocation
+- Scheduler job assignment
+
+Integration and fault-injection testing will be introduced as distributed features are implemented.
+
+### Consequences
+
+**Positive:**
+- Faster debugging
+- Reliable regression testing
+- Provides a stable foundation before introducing distributed complexity
+
+**Negative:**
+- Current tests do not validate network communication or multi-node behaviour
 
 ## Ongoing decisions:
 
