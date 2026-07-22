@@ -56,6 +56,9 @@ TEST(Scheduler, SchedulesJobToAvailableWorker) {
     scheduler.submitJob(job);
     scheduler.schedule();
     EXPECT_EQ(scheduler.queueSize(),0);
+    const Job* running = scheduler.getRunningJob("job1");
+    ASSERT_NE(running, nullptr);
+    EXPECT_EQ(running->getWorkerID(), "worker1");
 
 }
 

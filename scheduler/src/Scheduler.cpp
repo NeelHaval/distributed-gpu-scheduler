@@ -86,7 +86,11 @@ bool Scheduler::completeJob(const std::string& jobID) {
     }
 
     // Call on worker class completeJob method
-    workerIt->second.completeJob(jobIt->second);
+    if (!workerIt->second.completeJob(jobIt->second)) {
+
+        return false;
+
+    }
 
     // Remove this job from running jobs
     runningJobs.erase(jobIt);
@@ -132,6 +136,9 @@ void Scheduler::schedule() {
         // If worker was found
         }
 
+        // Assign specific worker to current job
+        job.assignWorker(worker->getWorkerID());
+
         // Defensive execution check in case worker state changed
         // between scheduling and execution
         if ((*worker).executeJob(job)) {
@@ -145,7 +152,11 @@ void Scheduler::schedule() {
 
             if (!result.second) {
 
-                return;
+                worker->completeJob(job);
+
+                jobQueue.push(job);
+
+                continue;
 
             }
 
@@ -198,7 +209,22 @@ Worker* Scheduler::findAvailableWorker(const Job& job) {
 
 
 
- }
+}
+
+// Getter for schedulers updated live copy of a job object in runningJobs
+const Job* Scheduler::getRunningJob(const std::string& id) const {
+
+    auto it = runningJobs.find(id);
+
+    if (it == runningJobs.end()) {
+
+        return nullptr;
+
+    }
+
+    return &it->second;
+
+}
 
 // Methods for testing
 size_t Scheduler::queueSize() const {

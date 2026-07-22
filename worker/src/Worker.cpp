@@ -63,9 +63,6 @@ bool Worker::executeJob(Job& job) {
     // Assign resources
     assignResources(job.getRequiredCPUs(), job.getRequiredGPUs(), job.getRequiredMem());
 
-    // Assign specific worker to current job
-    job.assignWorker(workerID);
-
     // Update currentJobID
     currentJobID = job.getJobID();
 
@@ -103,7 +100,7 @@ bool Worker::completeJob(Job& job) {
 }
 
 // Check resources
-bool Worker::checkResources(int requiredCPUs, int requiredGPUs, size_t requiredMem) {
+bool Worker::checkResources(int requiredCPUs, int requiredGPUs, size_t requiredMem) const {
 
     if (availableCPUs < requiredCPUs || availableGPUs < requiredGPUs ||
         availableMem < requiredMem) {

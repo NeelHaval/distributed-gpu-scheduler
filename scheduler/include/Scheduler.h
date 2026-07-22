@@ -35,11 +35,17 @@ class Scheduler {
     size_t queueSize() const;
     int workerCount() const;
 
+    // Getter for schedulers updated live copy of a job object in runningJobs
+    const Job* getRunningJob(const std::string& id) const;
+
     private:
 
     // Vector containing current registered workers
     std::unordered_map<std::string, Worker> registeredWorkers;
 
+    // Phase 1 stores Jobs by value.
+    // Later phases should replace this with shared_ptr<Job>
+    // to avoid multiple copies across scheduler state.
     // Jobs currently in queue
     std::queue<Job> jobQueue;
 

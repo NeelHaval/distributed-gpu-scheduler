@@ -36,7 +36,7 @@ class Worker {
     void updateState(WorkerState newStateW);
 
     // Verify existence of resources
-    bool checkResources(int requiredCPUs, int requiredGPUs, size_t requiredMem);
+    bool checkResources(int requiredCPUs, int requiredGPUs, size_t requiredMem) const;
 
     // Reserve resources
     void assignResources(int requiredCPUs, int requiredGPUs, size_t requiredMem);

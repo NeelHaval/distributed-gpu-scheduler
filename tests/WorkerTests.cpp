@@ -23,7 +23,6 @@ TEST(Worker, AcceptsJobWithEnoughResources) {
     EXPECT_EQ(worker.getAvailableCPUs(), 6);
     EXPECT_EQ(worker.getAvailableGPUs(), 1);
     EXPECT_EQ(worker.getAvailableMem(), 12000);
-    EXPECT_EQ(job.getWorkerID(), "worker1");
 }
 
 

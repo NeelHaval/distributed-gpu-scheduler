@@ -160,6 +160,12 @@ Integration and fault-injection testing will be introduced as distributed featur
 **Negative:**
 - Current tests do not validate network communication or multi-node behaviour
 
+## 22/07/2026
+
+Modified scheduler tests to verify that it keeps and modifies only its copy
+of a running job. This means that the original job object submitted by the client 
+remains unmodified.
+
 ## Ongoing decisions:
 
 - C++ networking library?
