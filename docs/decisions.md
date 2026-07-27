@@ -166,6 +166,14 @@ Modified scheduler tests to verify that it keeps and modifies only its copy
 of a running job. This means that the original job object submitted by the client 
 remains unmodified.
 
+## 27/07/2026
+
+The socket class (Socket.h) is marked as a non - copyable through delete for both the copy
+constructor and the copy assignment operatrors. This is to prevent accidental duplication
+of socketFD which represents a TCP connection. If copying were allowed, then both objects
+would try to manage the same connection which would cause double close errors and corrupted
+communications.
+
 ## Ongoing decisions:
 
 - C++ networking library?
