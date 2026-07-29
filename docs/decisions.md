@@ -113,7 +113,8 @@ This provides safe concurrent scheduling while preserving the current separation
 ### Decision: Adopt GoogleTest for unit testing
 
 Context:<br>
-The scheduler consists of multiple C++ components (`Job`, `Worker`, and `Scheduler`) which will become increasingly complex as networking and fault tolerance are introduced.
+The scheduler consists of multiple C++ components (`Job`, `Worker`, and `Scheduler`) 
+which will become increasingly complex as networking and fault tolerance are introduced.
 
 Decision:<br>
 GoogleTest was selected as the unit testing framework.
@@ -139,7 +140,8 @@ Reasons:<br>
 ### Decision: Test components independently before distributed integration
 
 Context:<br>
-The system will eventually include distributed behaviour such as networking, worker failures, and job recovery. These features introduce more complex failure modes.
+The system will eventually include distributed behaviour such as networking, 
+worker failures, and job recovery. These features introduce more complex failure modes.
 
 Initial testing focuses on deterministic unit tests for individual components.
 
@@ -173,6 +175,31 @@ constructor and the copy assignment operatrors. This is to prevent accidental du
 of socketFD which represents a TCP connection. If copying were allowed, then both objects
 would try to manage the same connection which would cause double close errors and corrupted
 communications.
+
+## 27/07/2026
+
+## Networking Layer Choice: Winsock
+
+For the networking layer of the distributed GPU scheduler, **Winsock 
+(Windows Sockets API)** was selected as the interface between our C++ application 
+and the underlying Windows networking stack.
+
+Winsock was chosen because it provides a mature, low level TCP/IP interface while 
+allowing direct control over socket operations such as connection management, 
+data transmission, and communication between distributed processes. This makes 
+it suitable for a systems level project where understanding and controlling 
+network behaviour is important.
+
+Using Winsock also allows the scheduler to communicate with worker nodes through 
+standard TCP connections without relying on external networking libraries. This 
+keeps the architecture lightweight and gives direct exposure to core networking 
+concepts such as sockets, streams, message transmission, and connection handling.
+
+The networking layer is wrapped inside a custom C++ `Socket` abstraction. This 
+separates operating-system-specific networking details from the scheduler and 
+worker logic, allowing higher-level components to communicate using simple 
+interfaces while keeping the underlying implementation modular and maintainable.
+
 
 ## Ongoing decisions:
 
