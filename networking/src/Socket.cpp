@@ -168,7 +168,7 @@ bool Socket::connect(const std::string& ip, int port) {
         == SOCKET_ERROR) {
 
             closesocket(socketFD);
-            socketFD = INVALID_SOCKET;
+            socketFD = -1;
             return false;
 
     }

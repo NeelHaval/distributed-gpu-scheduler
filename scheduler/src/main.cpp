@@ -1,67 +1,51 @@
 #include <iostream>
+#include <winsock2.h>
 #include "Scheduler.h"
-#include "Worker.h"
-#include "Job.h"
+#include "Server.h"
 
 int main() {
 
-    // Print to signal scheduler starting
-    std::cout << "Starting GPU Scheduler prototype...\n\n";
+    // Ready windows networking library
+    WSADATA wsaData;
 
-    // Create scheduler object and print
-    Scheduler scheduler;
-    std::cout << "[Scheduler] Created scheduler\n";
+    // In case windows networking library setup fails
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
 
-    // Create workers
-    Worker workerA("workerA", 8, 2, 16000);
-
-    // Print workerA details
-    std::cout << "[worker] Created worker: workerA\n";
-    std::cout << "      CPUs: 8\n";
-    std::cout << "      GPUs: 2\n";
-    std::cout << "      Memory: 16000MB\n\n";
-
-    // workerA registers with scheduler
-    scheduler.registerWorker(workerA);
-    std::cout << "[Scheduler] Registered workerA";
-
-    // Create job (GPUS, Mem, CPUs)
-    Job job("job1", 1, 4000, 2, "train_model.py");
-
-    // Print to show details
-    std::cout << "[Client] Submitted job: job1\n";
-    std::cout << "      Requires:\n";
-    std::cout << "      CPUs: 2\n";
-    std::cout << "      GPUs: 1\n";
-    std::cout << "      Memory: 4000\n\n";
-
-    // Submit this job
-    scheduler.submitJob(job);
-    std::cout << "[Scheduler] Job queued\n\n";
-
-    // Scheduling algorithm
-    std::cout << "[Scheduler] Attempting scheduling...\n";
-    scheduler.schedule();
-
-    // Complete scheduling
-    std::cout << "[Scheduler] Scheduling complete\n\n";
-
-    // Complete job
-    std::cout << "[Worker] Finished executing job1\n";
-
-    if (scheduler.completeJob("job1")) {
-
-        std::cout << "[Scheduler] Recorded job completion\n";
-
-    } else {
-
-        std::cout << "[Scheduler] Failed to complete job\n\n";
+        std::cerr << "WSAStartup failed.\n";
+        return 1;
 
     }
 
-    // Finish step by step example of scheduler
-    std::cout << "GPU Scheduler prototype finished.\n";
+    // Initialise the scheduler object
+    Scheduler scheduler;
 
+    // Create a TCP server which listens exclusively to port 5000
+    Server server(5000);
+
+    // Begin listening
+    if (!server.start()) {
+
+        std::cerr << "Failed to start server.\n";
+
+        // Stop process and cleanup
+        WSACleanup();
+        return 1;
+
+    }
+
+    // Print listening port successful status
+    std::cout << "Listening to port 5000";
+
+    // Listen for connecting worker
+    Socket workerSocket = server.acceptClient();
+
+    // Print worker connected status
+    std::cout << "Worker connected.";
+
+    // Shut down winsock
+    WSACleanup();
+
+    // Exit program
     return 0;
 
 }

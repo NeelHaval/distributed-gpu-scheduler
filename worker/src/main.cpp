@@ -1,23 +1,42 @@
 #include <iostream>
-#include <Worker.h>
+#include <winsock.h>
+#include "Worker.h"
+#include "Client.h"
 
 int main() {
 
-    // Start process
-    std::cout << "Starting worker process...\n\n";
+    // Ready windows networking library
+    WSADATA wsaData;
 
-    // Create worker
-    Worker worker("workerA", 8, 2, 16000);
+    // In case windows networking library setup fails
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
 
-    // Print details about worker
-    std::cout << "Worker created:\n";
-    std::cout << "ID: workerA\n";
-    std::cout << "CPUs: 8";
-    std::cout << "GPUs: 2";
-    std::cout << "Memory: 16000MB\n\n";
+        std::cerr << "WSAStartup failed.\n";
+        return 1;
 
-    std::cout << "Waiting for jobs...\n";
+    }
 
+    // Initialise worker object
+    // Note 16384 is 16GB
+    Worker worker("worker1", 8, 1, 16384);
+
+    // Initialise client object
+    Client client;
+
+    // Connect to port and verify
+    if (!client.connect("127.0.0.1", 5000)) {
+
+        std::cerr << "Failed to connect\n";
+        WSACleanup();
+        return 1;
+
+    }
+
+    // Signal that connected to scheduler
+    std::cout << "Connected to scheduler.\n";
+
+    // Shut down winsock
+    WSACleanup();
     return 0;
-
+    
 }
