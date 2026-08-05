@@ -4,4 +4,4 @@ add_library(worker
 
 target_include_directories(worker PUBLIC include)
 
-target_link_libraries(worker PUBLIC common)
+target_link_libraries(worker PUBLIC common networking)

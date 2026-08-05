@@ -3,7 +3,7 @@
 #include <unordered_map>
 #include <queue>
 #include "Job.h"
-#include "Worker.h"
+#include "WorkerInfo.h"
 
 // Class interface
 class Scheduler {
@@ -14,7 +14,7 @@ class Scheduler {
     Scheduler();
 
     // Register workers
-    void registerWorker(const Worker& worker);
+    void registerWorker(const WorkerInfo& worker);
 
     // Push jobs into queue
     void submitJob(const Job& job);
@@ -29,7 +29,7 @@ class Scheduler {
     void failJob(const std::string& jobID);
 
     // Return chosen worker
-    Worker* findAvailableWorker(const Job& job);
+    WorkerInfo* findAvailableWorker(const Job& job);
 
     // Required for testing
     size_t queueSize() const;
@@ -41,7 +41,7 @@ class Scheduler {
     private:
 
     // Vector containing current registered workers
-    std::unordered_map<std::string, Worker> registeredWorkers;
+    std::unordered_map<std::string, WorkerInfo> registeredWorkers;
 
     // Phase 1 stores Jobs by value.
     // Later phases should replace this with shared_ptr<Job>

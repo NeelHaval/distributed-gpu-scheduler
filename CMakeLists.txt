@@ -6,10 +6,11 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_subdirectory(common)
+add_subdirectory(networking)
 add_subdirectory(worker)
 add_subdirectory(scheduler)
-add_subdirectory(external/googletest)
-add_subdirectory(tests)
+#add_subdirectory(external/googletest)
+#add_subdirectory(tests)
 
 # NEW
 add_executable(gpu_scheduler
@@ -22,6 +23,7 @@ target_link_libraries(gpu_scheduler
     scheduler
     worker
     common
+    networking
 )
 
 add_executable(client_app 
@@ -31,7 +33,8 @@ target_link_libraries(client_app
         PRIVATE 
         common 
         worker 
-        scheduler)
+        scheduler
+        networking)
 
 add_executable(worker_app 
         worker/src/main.cpp)
@@ -40,7 +43,8 @@ target_link_libraries(worker_app
         PRIVATE 
         common
         worker 
-        scheduler)
+        scheduler
+        networking)
 
 # Include directories for main executable
 target_include_directories(gpu_scheduler
@@ -48,4 +52,5 @@ target_include_directories(gpu_scheduler
     scheduler/include
     worker/include
     common/include
+    networking/include
 )

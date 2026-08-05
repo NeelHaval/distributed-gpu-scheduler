@@ -8,4 +8,5 @@ target_link_libraries(scheduler
     PUBLIC
     common
     worker
+    networking
 )

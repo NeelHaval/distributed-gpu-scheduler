@@ -15,9 +15,9 @@ Scheduler::Scheduler()
                     }
 
 // Register worker - for phase one simply record using registeredWorkers
-void Scheduler::registerWorker(const Worker& worker) {
+void Scheduler::registerWorker(const WorkerInfo& worker) {
 
-    auto newWorker = registeredWorkers.emplace(worker.getWorkerID(), worker);
+    auto newWorker = registeredWorkers.emplace(worker.workerID, worker);
 
     // Increment workersRegistered only if new worker was added
     if (newWorker.second == true) {
@@ -82,15 +82,16 @@ bool Scheduler::completeJob(const std::string& jobID) {
     if (workerIt == registeredWorkers.end()) {
 
         return false;
-        
-    }
-
-    // Call on worker class completeJob method
-    if (!workerIt->second.completeJob(jobIt->second)) {
-
-        return false;
 
     }
+
+    // Update schedulers own record of worker resources
+    workerIt->second.availableCPUs += jobIt->second.getRequiredCPUs();
+    workerIt->second.availableGPUs += jobIt->second.getRequiredGPUs();
+    workerIt->second.availableMem += jobIt->second.getRequiredMem();
+
+    // Worker is idle
+    workerIt->second.state = WorkerState::Idle;
 
     // Remove this job from running jobs
     runningJobs.erase(jobIt);
@@ -122,7 +123,7 @@ void Scheduler::schedule() {
         jobQueue.pop();
 
         // Find a suitable worker
-        Worker* worker = findAvailableWorker(job);
+        WorkerInfo* worker = findAvailableWorker(job);
 
         // If no suitable worker found
         if ( worker == nullptr) {
@@ -137,35 +138,26 @@ void Scheduler::schedule() {
         }
 
         // Assign specific worker to current job
-        job.assignWorker(worker->getWorkerID());
+        job.assignWorker(worker->workerID);
 
-        // Defensive execution check in case worker state changed
-        // between scheduling and execution
-        if ((*worker).executeJob(job)) {
+        // As of phase 2 scheduler does not execute jobs
+        // Reserve resources in scheduler's worker record
+        worker->availableCPUs -= job.getRequiredCPUs();
+        worker->availableGPUs -= job.getRequiredGPUs();
+        worker->availableMem -= job.getRequiredMem();
 
-            // Run job - note that this may have to change later as project networks
-            // more i.e. enter Queued and scheduling states
-            job.updateState(JobState::Running);
+        // Mark worker busy
+        worker->state = WorkerState::Busy;
 
-            // Insert into runningJobs
-            auto result = runningJobs.emplace(job.getJobID(), job);
+        // Mark job running
+        job.updateState(JobState::Running);
 
-            if (!result.second) {
+        // Store running job
+        runningJobs.emplace(job.getJobID(), job);
 
-                worker->completeJob(job);
-
-                jobQueue.push(job);
-
-                continue;
-
-            }
-
-        } else {
-
-            // Re-insert job into queue to prevent loss
-            jobQueue.push(job);
-
-        }
+        // IMPORTANT:
+        // IMPLEMENT COMMUNICATION WORKFLOW WHICH ACTUALLY PASSES
+        // JOB TO WORKER
 
     }
 
@@ -176,21 +168,22 @@ void Scheduler::schedule() {
 // Return first fit - poor utilization
 // Later phases - Improve worker selection algorithm
 // Return chosen worker
-Worker* Scheduler::findAvailableWorker(const Job& job) {
+WorkerInfo* Scheduler::findAvailableWorker(const Job& job) {
 
     // Iterate through registeredWorkers to find suitable worker
     for (auto& [workerID, worker] : registeredWorkers) {
 
         // Find a worker which is currently free
-        if (worker.getState() != WorkerState::Idle) {
+        if (worker.state != WorkerState::Idle) {
 
             continue;
 
         }
 
         // If worker is free
-        if (worker.checkResources(job.getRequiredCPUs(), job.getRequiredGPUs(),
-            job.getRequiredMem())) {
+        if (worker.availableCPUs >= job.getRequiredCPUs() &&
+            worker.availableGPUs >= job.getRequiredGPUs() &&
+            worker.availableMem >= job.getRequiredMem()) {
 
             // Must return a pointer
             return& worker;

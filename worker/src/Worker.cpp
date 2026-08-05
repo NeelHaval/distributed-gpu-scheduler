@@ -1,5 +1,6 @@
 #include "Worker.h"
 #include <algorithm>
+#include <iostream>
 
 // Constructor to initialise Worker object
 Worker::Worker(const std::string& workerID, int totalCPUs, int totalGPUs, 
@@ -40,10 +41,26 @@ Worker::Worker(const std::string& workerID, int totalCPUs, int totalGPUs,
                 
                }
 
+// Method allowing worker to connect to scheduler
+bool Worker::connectToScheduler(const std::string& ip, int port) {
+
+    return client.connect(ip, port);
+
+}
+
 // Register worker
 void Worker::registerWorker() {
 
     // Implement in phase 2 when networking is added
+    std::string message = ("REGISTER|" + workerID + "|" + std::to_string(totalCPUs) + "|"
+                + std::to_string(totalGPUs) + "|" + std::to_string(totalMem));
+
+    std::cout << "Sending: [" << message << "]\n";
+
+    bool success = client.send(message);
+
+    std::cout << "client.send() returned "
+              << (success ? "true" : "false") << "\n";
 
 }
 

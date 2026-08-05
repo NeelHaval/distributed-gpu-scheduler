@@ -1,5 +1,5 @@
 #include <iostream>
-#include <winsock.h>
+#include <winsock2.h>
 #include "Worker.h"
 #include "Client.h"
 
@@ -20,17 +20,17 @@ int main() {
     // Note 16384 is 16GB
     Worker worker("worker1", 8, 1, 16384);
 
-    // Initialise client object
-    Client client;
-
     // Connect to port and verify
-    if (!client.connect("127.0.0.1", 5000)) {
+    if (!worker.connectToScheduler("127.0.0.1", 5000)) {
 
         std::cerr << "Failed to connect\n";
         WSACleanup();
         return 1;
 
     }
+
+    // Register worker with scheduler
+    worker.registerWorker();
 
     // Signal that connected to scheduler
     std::cout << "Connected to scheduler.\n";

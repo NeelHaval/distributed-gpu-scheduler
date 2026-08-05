@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#include <iostream>
 
 // Constructor to initialize Socket object
 Socket::Socket() : 
@@ -79,34 +80,32 @@ Socket& Socket::operator=(Socket&& other) {
 // Method to send scheduler protocol messages
 bool Socket::send(const std::string& data) {
 
-    // Extract characters
+    std::cout << "Socket::send() called\n";
+
     const char* c = data.c_str();
+    int nBytes = static_cast<int>(data.size());
 
-    // Extract number of bytes required
-    int nBytes = data.size();
-
-    // Variable to hold sent result
     int sent = 0;
-
-    // Variable to hold current sent
-    int result;
 
     while (sent < nBytes) {
 
-        // Send this information using the 
-        result = ::send(socketFD, c + sent, nBytes - sent, 0);
+        int result = ::send(socketFD,
+                            c + sent,
+                            nBytes - sent,
+                            0);
 
-        // Verify is success
+        std::cout << "::send returned " << result << "\n";
+
         if (result == SOCKET_ERROR) {
 
-            // Signal success
-            return false;
+            std::cout << "WSA Error = "
+                      << WSAGetLastError()
+                      << "\n";
 
+            return false;
         }
 
-        // Increment total sent counter
         sent += result;
-
     }
 
     return true;
@@ -262,3 +261,41 @@ Socket Socket::accept() {
     return Socket(clientFD);
 
 }
+
+/*
+
+Should go inside Socket::send:
+
+// Extract characters
+    const char* c = data.c_str();
+
+    // Extract number of bytes required
+    int nBytes = data.size();
+
+    // Variable to hold sent result
+    int sent = 0;
+
+    // Variable to hold current sent
+    int result;
+
+    while (sent < nBytes) {
+
+        // Send this information using the 
+        result = ::send(socketFD, c + sent, nBytes - sent, 0);
+
+        // Verify is success
+        if (result == SOCKET_ERROR) {
+
+            // Signal success
+            return false;
+
+        }
+
+        // Increment total sent counter
+        sent += result;
+
+    }
+
+    return true;
+
+*/

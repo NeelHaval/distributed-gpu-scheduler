@@ -200,6 +200,26 @@ separates operating-system-specific networking details from the scheduler and
 worker logic, allowing higher-level components to communicate using simple 
 interfaces while keeping the underlying implementation modular and maintainable.
 
+## 04/08/2026
+
+## Scheduler and Worker Separation
+
+The scheduler and workers are now separate standalone processes that communicate 
+over TCP rather than through direct method calls.
+
+The scheduler no longer owns or controls `Worker` objects. Instead, it maintains 
+lightweight `WorkerInfo` records containing each worker's available resources, 
+state, and identity. These records represent the scheduler's view of the cluster 
+rather than the workers themselves.
+
+Workers now exist as independent processes with their own internal state and 
+resource management. The scheduler is responsible for assigning jobs and tracking 
+worker status, while workers are responsible for executing jobs and maintaining 
+their own execution state.
+
+This establishes a clear separation of responsibilities and forms the foundation 
+for network-based job dispatching and status updates in later phases.
+
 
 ## Ongoing decisions:
 

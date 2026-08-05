@@ -2,7 +2,9 @@
 #include <string>
 #include <chrono>
 #include "Job.h"
-
+#include "Client.h"
+#include "WorkerState.h"
+/*
 // Worker state
 enum class WorkerState {
 
@@ -12,11 +14,14 @@ enum class WorkerState {
     Registering
 
 };
-
+*/
 // Class interface
 class Worker {
 
     public:
+
+    // Method allowing worker to connect to scheduler
+    bool connectToScheduler(const std::string& ip, int port);
 
     // Constructor
     Worker(const std::string& workerID, int totalCPUs, int totalGPUs, size_t totalMem);
@@ -70,6 +75,9 @@ class Worker {
     */
 
     private:
+
+    // Worker owns client object
+    Client client;
 
     // Identity parameters
     std::string workerID;
