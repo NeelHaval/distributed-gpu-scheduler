@@ -31,6 +31,9 @@ class Worker {
     // Worker registers with scheduler
     void registerWorker();
 
+    // Receive scheduler messages
+    std::string receiveMessages();
+
     // Worker executes job
     bool executeJob(Job& job);
 

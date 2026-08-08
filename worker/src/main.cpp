@@ -32,6 +32,34 @@ int main() {
     // Register worker with scheduler
     worker.registerWorker();
 
+    // Worker stays alive after registering
+    while (true) {
+
+        std::string message = worker.receiveMessages();
+
+        std::cout << "Received message: "
+          << message
+          << "\n";
+
+        // Process message
+        if (message.rfind("JOB|", 0) == 0) {
+
+            // Erase the "JOB|" prefix
+            message.erase(0, 4);
+
+            // Retrieve job characteristics and assign to new Job object
+            Job job = Job::deserialize(message);
+
+            // Execute job
+            worker.executeJob(job);
+
+            // Signal complete
+            worker.completeJob(job);
+
+        }
+
+    }
+
     // Signal that connected to scheduler
     std::cout << "Connected to scheduler.\n";
 

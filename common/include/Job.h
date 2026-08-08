@@ -73,7 +73,7 @@ class Job {
     // Accessible through class only variables for Jobs
     private:
     std::string jobID;
-    std::chrono::steady_clock::time_point submissionTime;
+    std::chrono::system_clock::time_point submissionTime;
     int requiredGPUs;
     int requiredCPUs;
     size_t requiredMem;

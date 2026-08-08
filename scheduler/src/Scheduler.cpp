@@ -1,4 +1,6 @@
 #include "Scheduler.h"
+#include <utility>
+#include <iostream>
 
 // Constructor to initialise private variables
 Scheduler::Scheduler()
@@ -33,8 +35,19 @@ void Scheduler::registerWorker(const WorkerInfo& worker) {
 
 }
 
+// Register worker socket
+void Scheduler::registerWorkerSocket(const std::string& workerID, Socket socket) {
+
+    // Socket cannot be copied
+    workerSockets.emplace(workerID, std::move(socket));
+
+}
+
 // Schedulers method to modify the job to submitted
 void Scheduler::submitJob(const Job& job) {
+
+    // Trial
+    std::cout << "Scheduler::submitJob() called\n";
 
     // Make a copy of the job
     Job queuedJob = job;
@@ -47,6 +60,33 @@ void Scheduler::submitJob(const Job& job) {
 
     // Increment submitted jobs
     jobsSubmitted++;
+
+}
+
+// Send job to worker
+bool Scheduler::sendJobWorker(const Job& job) {
+
+    // Find socket associated with worker
+    auto socketIt = workerSockets.find(job.getWorkerID());
+    
+    // If not found signal failure
+    if (socketIt == workerSockets.end()) {
+
+        return false;
+
+    }
+
+    // Send job to worker through socket
+    std::string message = std::string(Messages::JOB) + "|" + job.serialize();
+
+    ///// TRIAL
+    std::cout << "Sending job to worker: " << job.getWorkerID() << "\n";
+
+    std::cout << "Message: " << message << "\n";
+    /////
+
+    // Send message to associated worker
+    return socketIt->second.send(message);
 
 }
 
@@ -72,7 +112,7 @@ bool Scheduler::completeJob(const std::string& jobID) {
     if (!result.second) {
 
         return false;
-        
+
     }
 
     // Retrieve the worker object which is running this job
@@ -112,6 +152,10 @@ bool Scheduler::completeJob(const std::string& jobID) {
 // Scheduling algorithm
 void Scheduler::schedule() {
 
+    // Trial
+    std::cout << "Scheduler::schedule() called\n";
+    std::cout << "Jobs in queue: " << jobQueue.size() << "\n";
+
     // Counter to record number of jobs processed
     size_t jobsAttempted = jobQueue.size();
 
@@ -124,6 +168,21 @@ void Scheduler::schedule() {
 
         // Find a suitable worker
         WorkerInfo* worker = findAvailableWorker(job);
+
+        //// TRIAL
+        if(worker == nullptr) {
+
+            std::cout << "No available worker found\n";
+
+        }
+        else {
+
+            std::cout << "Found worker: "
+                    << worker->workerID
+                    << "\n";
+
+        }
+        //// TRIAL
 
         // If no suitable worker found
         if ( worker == nullptr) {
@@ -155,9 +214,8 @@ void Scheduler::schedule() {
         // Store running job
         runningJobs.emplace(job.getJobID(), job);
 
-        // IMPORTANT:
-        // IMPLEMENT COMMUNICATION WORKFLOW WHICH ACTUALLY PASSES
-        // JOB TO WORKER
+        // Send message
+        sendJobWorker(job);
 
     }
 

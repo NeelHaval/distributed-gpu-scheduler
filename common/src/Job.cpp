@@ -11,7 +11,7 @@ Job::Job(const std::string& jobID, int requiredGPUs, size_t requiredMem, int req
 
     // Initalise instance specific variables using constructor
     jobID(jobID),
-    submissionTime(std::chrono::steady_clock::now()),
+    submissionTime(std::chrono::system_clock::now()),
     requiredGPUs(requiredGPUs),
     requiredMem(requiredMem),
     requiredCPUs(requiredCPUs),
@@ -116,7 +116,7 @@ Job Job::deserialize(const std::string& data) {
     // submissionTime
     std::getline(ss, token, '|');
     long long millisec = std::stoll(token);
-    job.submissionTime = std::chrono::time_point<std::chrono::steady_clock>(
+    job.submissionTime = std::chrono::time_point<std::chrono::system_clock>(
         std::chrono::milliseconds(millisec));
 
     // Return packaged job object

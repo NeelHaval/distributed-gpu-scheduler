@@ -4,6 +4,7 @@
 #include "Scheduler.h"
 #include "Server.h"
 #include "WorkerInfo.h"
+#include "Job.h"
 
 // Method to parse registration
 WorkerInfo parseRegistration(std::string message) {
@@ -106,8 +107,32 @@ int main() {
         // Register worker with scheduler
         scheduler.registerWorker(worker);
 
+        // Save appropriate socket
+        scheduler.registerWorkerSocket(worker.workerID, std::move(workerSocket));
+
         // Print status
         std::cout << "Registered worker: " << worker.workerID << "\n";
+
+        // ------------------------------
+        // TEST JOB
+        // ------------------------------
+
+        Job testJob (
+            "job1",
+            1,          // GPU
+            1024,       // Memory
+            2,          // CPU
+            "test_payload",
+            JobPriority::Normal
+        );
+
+
+        // Add job to scheduler queue
+        scheduler.submitJob(testJob);
+
+
+        // Try to assign it to a worker
+        scheduler.schedule();
 
     }
 

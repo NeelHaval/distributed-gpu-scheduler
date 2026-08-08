@@ -220,6 +220,11 @@ their own execution state.
 This establishes a clear separation of responsibilities and forms the foundation 
 for network-based job dispatching and status updates in later phases.
 
+## 05/08/2026
+
+Note that the Job methods serialize and deserialize currently ignore that a payload
+may consist of '|'. This means the methods may have to adapt to support a wider
+variety of payloads perhaps through a length - prefixed format.
 
 ## Ongoing decisions:
 

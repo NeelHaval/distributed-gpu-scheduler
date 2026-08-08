@@ -48,6 +48,13 @@ bool Worker::connectToScheduler(const std::string& ip, int port) {
 
 }
 
+// Receive scheduler messages
+std::string Worker::receiveMessages() {
+
+    return client.receive();
+
+}
+
 // Register worker
 void Worker::registerWorker() {
 
@@ -86,6 +93,11 @@ bool Worker::executeJob(Job& job) {
     // Worker becomes busy
     updateState(WorkerState::Busy);
 
+    // Signal to scheduler that job has started
+    std::string message = "STARTED|" + job.getJobID();
+
+    client.send(message);
+
     // Job allocation successful
     return true;
 
@@ -112,8 +124,12 @@ bool Worker::completeJob(Job& job) {
 
     jobsCompleted++;
 
+    // Signal to scheduler that job complete
+    std::string message = "COMPLETE|" + job.getJobID();
+    client.send(message);
+
     return true;
-    
+
 }
 
 // Check resources

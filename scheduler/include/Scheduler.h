@@ -4,6 +4,8 @@
 #include <queue>
 #include "Job.h"
 #include "WorkerInfo.h"
+#include "Socket.h"
+#include "Messages.h"
 
 // Class interface
 class Scheduler {
@@ -16,8 +18,14 @@ class Scheduler {
     // Register workers
     void registerWorker(const WorkerInfo& worker);
 
+    // Register worker socket
+    void registerWorkerSocket(const std::string& workerID, Socket socket);
+
     // Push jobs into queue
     void submitJob(const Job& job);
+
+    // Send job to worker
+    bool sendJobWorker(const Job& job);
 
     // Scheduling algorithm
     void schedule();
@@ -42,6 +50,9 @@ class Scheduler {
 
     // Vector containing current registered workers
     std::unordered_map<std::string, WorkerInfo> registeredWorkers;
+
+    // Save sockets associated with workers
+    std::unordered_map<std::string, Socket> workerSockets;
 
     // Phase 1 stores Jobs by value.
     // Later phases should replace this with shared_ptr<Job>
