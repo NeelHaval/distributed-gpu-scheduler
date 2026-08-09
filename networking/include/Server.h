@@ -8,6 +8,9 @@ class Server {
     // Constructor initialising address
     Server(int port);
 
+    // Check whether a new client (worker) is waiting to connect
+    bool hasIncomingClient() const;
+
     // Begin server process
     bool start();
 

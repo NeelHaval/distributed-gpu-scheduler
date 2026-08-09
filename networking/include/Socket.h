@@ -43,8 +43,16 @@ class Socket {
     // Put socket into listening mode
     bool listen();
 
+    // Check whether there is data waiting to be read
+    bool hasData() const;
+
     // Accept an incomming connection
     Socket accept();
+
+    // Debugging getters
+    
+    // Socket.h
+    int getFD() const;
 
     private:
 
@@ -53,6 +61,10 @@ class Socket {
 
     // Note that socketFD should be changed from int to SOCKET 
     // as this is better compatible with winsock.
+
+    // Variable to store bytes received from network which have not yet been
+    // formed/been consumed as a full and complete message
+    std::string receiveBuffer;
 
 };
 

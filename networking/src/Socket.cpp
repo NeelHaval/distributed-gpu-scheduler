@@ -81,9 +81,13 @@ Socket& Socket::operator=(Socket&& other) {
 bool Socket::send(const std::string& data) {
 
     std::cout << "Socket::send() called\n";
+    std::cout << "Sending data: [" << data << "]\n";
 
-    const char* c = data.c_str();
-    int nBytes = static_cast<int>(data.size());
+    // Mark the end of the protocol message
+    std::string frameData = data + "\n";
+
+    const char* c = frameData.c_str();
+    int nBytes = static_cast<int>(frameData.size());
 
     int sent = 0;
 
@@ -117,23 +121,88 @@ bool Socket::send(const std::string& data) {
 // Method to receive protocol messages
 std::string Socket::receive() {
 
-    // Store incomming bytes in buffer
+    // Temporary buffer to capture bytes that were received
     char buffer[4096];
 
-    // Request data from winsock function
+    // Receive the above bytes
     int bytesReceived = ::recv(socketFD, buffer, sizeof(buffer), 0);
 
-    // Check failure
-    if (bytesReceived <= 0) {
+    // If error occurs
+    if (bytesReceived <= 0)  {
+
+        // Return empty string to signal error
+        return "";
+
+    }
+
+    // Add above bytes to the final buffer
+    receiveBuffer.append(buffer, bytesReceived);
+
+    // Check for new line (delimiter)
+    size_t delimiter = receiveBuffer.find('\n');
+
+    // If no delimiter found them message has not been fully transmitted
+    if (delimiter == std::string::npos) {
 
         return "";
 
     }
 
-    // Return full string
-    return std::string(buffer, bytesReceived);
+    // Otherwise extract the entire message (everything before the delimiter)
+    std::string message = receiveBuffer.substr(0, delimiter);
+
+    // Remove the entire message and its delimiter from buffer
+    receiveBuffer.erase(0, delimiter + 1);
+
+    // Return the full single protocol message
+    return message;
 
 }
+
+// Check whether there is data waiting to be read
+bool Socket::hasData() const {
+
+    // Make a set containing this socket
+    fd_set readSet;
+    FD_ZERO(&readSet);
+    FD_SET(socketFD, &readSet);
+
+    // Do not wait for check
+    timeval timeout{};
+    timeout.tv_sec = 0;
+    timeout.tv_usec = 0;
+
+    // Use winsock to check whether socket is readable
+    int result = ::select(0, &readSet, nullptr,
+                          nullptr, &timeout);
+
+    // TRIAL
+ //   std::cout << "hasData(): socketFD = "
+ //             << socketFD
+  //            << ", select result = "
+  //            << result
+ //             << "\n";
+    // TRIAL
+
+    // Report error
+    if (result == SOCKET_ERROR) {
+
+        // TRIAL
+        std::cout << "select error = "
+                  << WSAGetLastError()
+                  << "\n";
+        // TRIAL
+
+        return false;
+
+    }
+
+    // If the socket was successfully added to the read set then 
+    // data is available
+    return FD_ISSET(socketFD, &readSet);
+
+}
+
 //////////
 // Connect implementation
 bool Socket::connect(const std::string& ip, int port) {
@@ -262,6 +331,13 @@ Socket Socket::accept() {
 
 }
 
+// Debugging getters
+
+// Socket.cpp
+int Socket::getFD() const {
+    return socketFD;
+}
+
 /*
 
 Should go inside Socket::send:
@@ -297,5 +373,25 @@ Should go inside Socket::send:
     }
 
     return true;
+
+*/
+
+/* Old receive method
+
+// Store incomming bytes in buffer
+    char buffer[4096];
+
+    // Request data from winsock function
+    int bytesReceived = ::recv(socketFD, buffer, sizeof(buffer), 0);
+
+    // Check failure
+    if (bytesReceived <= 0) {
+
+        return "";
+
+    }
+
+    // Return full string
+    return std::string(buffer, bytesReceived);
 
 */

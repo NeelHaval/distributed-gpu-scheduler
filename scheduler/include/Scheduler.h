@@ -21,6 +21,9 @@ class Scheduler {
     // Register worker socket
     void registerWorkerSocket(const std::string& workerID, Socket socket);
 
+    // Check registered workers for incoming messages
+    void listenToWorkers();
+
     // Push jobs into queue
     void submitJob(const Job& job);
 

@@ -91,47 +91,68 @@ int main() {
     // Keep listening for new workers
     while (true) {
 
-        // Listen for connecting worker
-        Socket workerSocket = server.acceptClient();
+// XXXX        std::cout << "Checking for incoming worker...\n";
 
-        // Print worker connected status
-        std::cout << "Worker connected.\n";
+        // Check for new worker
+        if (server.hasIncomingClient()) {
+            
+            std::cout << "Incoming worker detected.\n";
 
-        // Revieve message by worker and print to terminal
-        std::string message = workerSocket.receive();
-        std::cout << "Received " << message.size() << " bytes.\n";
+            // If present accept
+            Socket workerSocket = server.acceptClient();
 
-        // Parse registration
-        WorkerInfo worker = parseRegistration(message);
+            // Print status message
+            std::cout << "Worker connected.\n";
 
-        // Register worker with scheduler
-        scheduler.registerWorker(worker);
+            // Receive registration
+            std::string message = workerSocket.receive();
 
-        // Save appropriate socket
-        scheduler.registerWorkerSocket(worker.workerID, std::move(workerSocket));
+            // Print status
+            std::cout << "Received" << message.size() << " bytes.\n";
 
-        // Print status
-        std::cout << "Registered worker: " << worker.workerID << "\n";
+            // Perse the registration message
+            WorkerInfo worker = parseRegistration(message);
 
-        // ------------------------------
-        // TEST JOB
-        // ------------------------------
+            // Fully register
+            scheduler.registerWorker(worker);
 
-        Job testJob (
-            "job1",
-            1,          // GPU
-            1024,       // Memory
-            2,          // CPU
-            "test_payload",
-            JobPriority::Normal
-        );
+            // TRIAL
+            std::cout << "REGISTERED WORKER: " << worker.workerID << "\n";
+            // TRIAL
 
+            // TRIAL
+            std::cout << "Accepted worker socket FD: "
+          << workerSocket.getFD()
+          << "\n";
+          // TRIAL
 
-        // Add job to scheduler queue
-        scheduler.submitJob(testJob);
+            // Store the socket associated with workerID
+            scheduler.registerWorkerSocket(worker.workerID, std::move(workerSocket));
 
+            // TRIAL
+            std::cout << "REGISTERED SOCKET FOR: " << worker.workerID << "\n";
+            // TRIAL
 
-        // Try to assign it to a worker
+            // Print status
+            std::cout << "Registered worker: " << worker.workerID << "\n";
+
+            // Test job TRIAL ONLY TRIAL ONLY TRIAL ONLY
+            Job testJob(
+                "job1",
+                1,          // required GPUs
+                1024,       // required memory MB
+                2,          // required CPUs
+                "test_payload",
+                JobPriority::Normal
+            );
+            scheduler.submitJob(testJob);
+
+        }
+
+        // Continue checking for existing worker messages
+        scheduler.listenToWorkers();
+
+        // Schedule waiting jobs
         scheduler.schedule();
 
     }

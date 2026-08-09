@@ -47,6 +47,13 @@ Socket Server::acceptClient() {
 
 }
 
+// Check whether a new client (worker) is waiting to connect
+bool Server::hasIncomingClient() const {
+
+    return listenSocket.hasData();
+
+}
+
 // Stop server operation and close listenSocket
 void Server::stop() {
 

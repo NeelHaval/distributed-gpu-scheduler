@@ -38,8 +38,63 @@ void Scheduler::registerWorker(const WorkerInfo& worker) {
 // Register worker socket
 void Scheduler::registerWorkerSocket(const std::string& workerID, Socket socket) {
 
+    // TRIAL
+    std::cout << "Registering socket FD: "
+              << socket.getFD()
+              << "\n";
+    // TRIAL
+
     // Socket cannot be copied
     workerSockets.emplace(workerID, std::move(socket));
+
+}
+
+// Check registered workers for incoming messages
+void Scheduler::listenToWorkers() {
+
+    // Check every connected worker
+    for (auto& [workerID, socket] : workerSockets) {
+
+        // TRIAL
+//         std::cout << "Checking worker socket: "
+ //             << workerID << "\n";
+        // TRIAL
+
+        // If nothing is waiting continue to the next worker
+        if (!socket.hasData()) {
+
+            continue;
+
+        }
+
+        // TRIAL
+        std::cout << "DATA AVAILABLE FROM: "
+              << workerID << "\n";
+        // TRIAL
+
+        // Otherwise
+        std::string message = socket.receive();
+
+        // Print status
+        std::cout << "Received from " << workerID << ": " << message << "\n";
+
+
+        // Handle completed jobs
+        if (message.rfind("COMPLETE|", 0) == 0) {
+
+            // Remove the prefix
+            std::string jobID = message.substr(9);
+
+            // Print status
+            std::cout << "Worker " << workerID << " completed job " << jobID
+                      << "\n";
+
+            // Complete the job on the schedulers side
+            completeJob(jobID);
+
+        }
+
+    }
 
 }
 
@@ -153,8 +208,8 @@ bool Scheduler::completeJob(const std::string& jobID) {
 void Scheduler::schedule() {
 
     // Trial
-    std::cout << "Scheduler::schedule() called\n";
-    std::cout << "Jobs in queue: " << jobQueue.size() << "\n";
+// XXXX    std::cout << "Scheduler::schedule() called\n";
+// XXXX    std::cout << "Jobs in queue: " << jobQueue.size() << "\n";
 
     // Counter to record number of jobs processed
     size_t jobsAttempted = jobQueue.size();
@@ -231,12 +286,34 @@ WorkerInfo* Scheduler::findAvailableWorker(const Job& job) {
     // Iterate through registeredWorkers to find suitable worker
     for (auto& [workerID, worker] : registeredWorkers) {
 
+        // TRIAL
+        std::cout << "Worker "
+          << workerID
+          << " state = "
+          << static_cast<int>(worker.state)
+          << "\n";
+          // TRIAL
+
         // Find a worker which is currently free
         if (worker.state != WorkerState::Idle) {
 
             continue;
 
         }
+
+        // TRIAL
+        std::cout << "Worker resources: "
+          << "CPU=" << worker.availableCPUs
+          << " GPU=" << worker.availableGPUs
+          << " MEM=" << worker.availableMem
+          << "\n";
+
+std::cout << "Job requires: "
+          << "CPU=" << job.getRequiredCPUs()
+          << " GPU=" << job.getRequiredGPUs()
+          << " MEM=" << job.getRequiredMem()
+          << "\n";
+        // TRIAL
 
         // If worker is free
         if (worker.availableCPUs >= job.getRequiredCPUs() &&

@@ -226,6 +226,149 @@ Note that the Job methods serialize and deserialize currently ignore that a payl
 may consist of '|'. This means the methods may have to adapt to support a wider
 variety of payloads perhaps through a length - prefixed format.
 
+## 09/08/2026
+
+# TCP Message Framing
+
+### The Problem
+
+During Phase 2, I discovered an important property of TCP that affected our application protocol.
+
+TCP is a **stream-oriented protocol**. It guarantees that bytes sent over a connection arrive reliably and in order, but it does **not preserve the boundaries between individual `send()` calls**.
+
+For example, the worker sends two separate messages:
+
+```text
+STARTED|job1
+COMPLETE|job1
+```
+
+These are sent at different points in the worker's code.
+However, the scheduler is not guaranteed to receive them separately.
+
+<br>
+A single call to:
+
+<br>
+
+recv(...)
+
+could return:
+
+STARTED|job1COMPLETE|job1
+
+as a result of a single recv() call.
+
+## The Solution: Message Delimiters
+
+We solved this by introducing a **message delimiter**.
+
+Every application-level message now ends with a newline character:
+
+```
+STARTED|job1\n
+COMPLETE|job1\n
+```
+
+The `\n` is not a TCP feature. It is part of **the application protocol**.
+
+The receiver maintains a persistent `receiveBuffer`.
+
+Whenever TCP provides some bytes, those bytes are appended to the buffer:
+
+```
+receiveBuffer.append(buffer, bytesReceived);
+```
+
+The receiver then searches the buffer for the `\n` delimiter.
+
+For example, TCP might provide:
+
+```
+STARTED|job1\nCOMPLETE|job1\n
+```
+
+The framing system can identify two complete application messages:
+
+```
+STARTED|job1
+COMPLETE|job1
+```
+
+If only part of a message has arrived, the incomplete data remains in `receiveBuffer` until more data arrives.
+
+For example, the first `recv()` might provide:
+
+```
+STARTED|job1\nCOM
+```
+
+The framing system extracts:
+
+```
+STARTED|job1
+```
+
+but keeps:
+
+```
+COM
+```
+
+in `receiveBuffer`.
+
+If the next `recv()` provides:
+
+```
+PLETE|job1\n
+```
+
+the buffer now contains enough data to reconstruct:
+
+```
+COMPLETE|job1
+```
+
+## Result
+
+Communication now has two separate layers:
+
+```
+┌──────────────────────────────┐
+│       Application Layer      │
+│                              │
+│ STARTED|job1\n               │
+│ COMPLETE|job1\n              │
+│                              │
+│ Our delimiter defines        │
+│ application message bounds   │
+└──────────────┬───────────────┘
+               │
+               ▼
+┌──────────────────────────────┐
+│             TCP              │
+│                              │
+│ Reliable ordered byte stream │
+│                              │
+│ Does NOT preserve messages   │
+└──────────────────────────────┘
+```
+
+TCP is responsible for reliably delivering the bytes in order.
+
+The application protocol is responsible for determining which bytes belong to which message.
+
+This framing mechanism allows the scheduler and worker to exchange multiple messages over the same persistent TCP connection without confusing message boundaries.
+
+## Key Lesson
+
+> **TCP provides a reliable byte stream, not a message protocol.**
+
+Therefore, when building an application protocol on top of TCP, the **message framing** mechanism must be implemented to suit the needs of the task.
+
+For this project, the newline (`\n`) was chosen as the messaging protocols are text based and do not require newlines.
+
+
 ## Ongoing decisions:
 
 - C++ networking library?
