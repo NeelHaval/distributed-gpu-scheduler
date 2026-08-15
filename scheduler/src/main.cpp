@@ -88,6 +88,48 @@ int main() {
     // Print listening port successful status
     std::cout << "Listening to port 5000\n";
 
+    // Jobs to test worker acceptance and rejection of jobs
+    Job job1(
+        "job1",
+        1,          // required GPUs
+        1024,       // required memory
+        2,          // required CPUs
+        "payload1",
+        JobPriority::Normal
+    );
+
+    Job job2(
+        "job2",
+        1,
+        1024,
+        2,
+        "payload2",
+        JobPriority::Normal
+    );
+
+    Job job3(
+        "job3",
+        1,
+        1024,
+        2,
+        "payload3",
+        JobPriority::Normal
+    );
+
+    Job job4(
+        "job4",
+        1,
+        1024,
+        2,
+        "payload4",
+        JobPriority::Normal
+    );
+
+    scheduler.submitJob(job1);
+    scheduler.submitJob(job2);
+    scheduler.submitJob(job3);
+    scheduler.submitJob(job4);
+
     // Keep listening for new workers
     while (true) {
 
@@ -95,7 +137,7 @@ int main() {
 
         // Check for new worker
         if (server.hasIncomingClient()) {
-            
+
             std::cout << "Incoming worker detected.\n";
 
             // If present accept
@@ -136,9 +178,13 @@ int main() {
             // Print status
             std::cout << "Registered worker: " << worker.workerID << "\n";
 
+            // Trial: Assign different jobs to workers
+            std::string jobID = "job_" + worker.workerID;
+
             // Test job TRIAL ONLY TRIAL ONLY TRIAL ONLY
+            /*
             Job testJob(
-                "job1",
+                jobID,
                 1,          // required GPUs
                 1024,       // required memory MB
                 2,          // required CPUs
@@ -146,6 +192,7 @@ int main() {
                 JobPriority::Normal
             );
             scheduler.submitJob(testJob);
+            */
 
         }
 

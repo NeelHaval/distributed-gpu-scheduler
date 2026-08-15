@@ -61,36 +61,41 @@ void Scheduler::listenToWorkers() {
         // TRIAL
 
         // If nothing is waiting continue to the next worker
-        if (!socket.hasData()) {
+        while (socket.hasBufferedMessage() || socket.hasData()) {
 
-            continue;
+            // TRIAL
+            std::cout << "DATA AVAILABLE FROM: "
+                << workerID << "\n";
+            // TRIAL
 
-        }
+            // Receive message
+            std::string message = socket.receive();
 
-        // TRIAL
-        std::cout << "DATA AVAILABLE FROM: "
-              << workerID << "\n";
-        // TRIAL
+            // If receive returned nothing or a partial message then come back another day
+            if (message.empty()) {
 
-        // Otherwise
-        std::string message = socket.receive();
+                break;
 
-        // Print status
-        std::cout << "Received from " << workerID << ": " << message << "\n";
-
-
-        // Handle completed jobs
-        if (message.rfind("COMPLETE|", 0) == 0) {
-
-            // Remove the prefix
-            std::string jobID = message.substr(9);
+            }
 
             // Print status
-            std::cout << "Worker " << workerID << " completed job " << jobID
-                      << "\n";
+            std::cout << "Received from " << workerID << ": " << message << "\n";
 
-            // Complete the job on the schedulers side
-            completeJob(jobID);
+
+            // Handle completed jobs
+            if (message.rfind("COMPLETE|", 0) == 0) {
+
+                // Remove the prefix
+                std::string jobID = message.substr(9);
+
+                // Print status
+                std::cout << "Worker " << workerID << " completed job " << jobID
+                          << "\n";
+
+                // Complete the job on the schedulers side
+                completeJob(jobID);
+
+            }
 
         }
 
@@ -194,6 +199,12 @@ bool Scheduler::completeJob(const std::string& jobID) {
     // Update jobs completed
     jobsCompleted++;
 
+    // Print queue size before job completed
+    std::cout << "Queue size: " << jobQueue.size() << "\n";
+
+    // Print jobs completed
+    std::cout << "Jobs completed: " << jobsCompleted << "\n";
+
     return true;
 
 }
@@ -227,7 +238,7 @@ void Scheduler::schedule() {
         //// TRIAL
         if(worker == nullptr) {
 
-            std::cout << "No available worker found\n";
+            //std::cout << "No available worker found\n";
 
         }
         else {
@@ -285,7 +296,7 @@ WorkerInfo* Scheduler::findAvailableWorker(const Job& job) {
 
     // Iterate through registeredWorkers to find suitable worker
     for (auto& [workerID, worker] : registeredWorkers) {
-
+/*
         // TRIAL
         std::cout << "Worker "
           << workerID
@@ -293,7 +304,7 @@ WorkerInfo* Scheduler::findAvailableWorker(const Job& job) {
           << static_cast<int>(worker.state)
           << "\n";
           // TRIAL
-
+*/
         // Find a worker which is currently free
         if (worker.state != WorkerState::Idle) {
 
@@ -308,7 +319,7 @@ WorkerInfo* Scheduler::findAvailableWorker(const Job& job) {
           << " MEM=" << worker.availableMem
           << "\n";
 
-std::cout << "Job requires: "
+        std::cout << "Job requires: "
           << "CPU=" << job.getRequiredCPUs()
           << " GPU=" << job.getRequiredGPUs()
           << " MEM=" << job.getRequiredMem()

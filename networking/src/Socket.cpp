@@ -121,40 +121,41 @@ bool Socket::send(const std::string& data) {
 // Method to receive protocol messages
 std::string Socket::receive() {
 
-    // Temporary buffer to capture bytes that were received
-    char buffer[4096];
-
-    // Receive the above bytes
-    int bytesReceived = ::recv(socketFD, buffer, sizeof(buffer), 0);
-
-    // If error occurs
-    if (bytesReceived <= 0)  {
-
-        // Return empty string to signal error
-        return "";
-
-    }
-
-    // Add above bytes to the final buffer
-    receiveBuffer.append(buffer, bytesReceived);
-
-    // Check for new line (delimiter)
+    // Served buffered messages before conducting a syscall
     size_t delimiter = receiveBuffer.find('\n');
 
-    // If no delimiter found them message has not been fully transmitted
+    // If no newline then full message not received
     if (delimiter == std::string::npos) {
 
-        return "";
+        // Receive raw bytes
+        char buffer[4096];
+        int bytesReceived = ::recv(socketFD, buffer, sizeof(buffer), 0);
+
+        // If no bytes received return empty string
+        if (bytesReceived <= 0) {
+
+            return "";
+
+        }
+
+        // Append new byte stream received to receiveBuffer
+        receiveBuffer.append(buffer, bytesReceived);
+
+        // Find delimiter
+        delimiter = receiveBuffer.find('\n');
+
+        // If full message still not received come back another working day
+        if (delimiter == std::string::npos) {
+
+            return "";
+
+        }
 
     }
 
-    // Otherwise extract the entire message (everything before the delimiter)
+    // Extract single message
     std::string message = receiveBuffer.substr(0, delimiter);
-
-    // Remove the entire message and its delimiter from buffer
     receiveBuffer.erase(0, delimiter + 1);
-
-    // Return the full single protocol message
     return message;
 
 }
@@ -200,6 +201,13 @@ bool Socket::hasData() const {
     // If the socket was successfully added to the read set then 
     // data is available
     return FD_ISSET(socketFD, &readSet);
+
+}
+
+// Check whether buffered data is waiting
+bool Socket::hasBufferedMessage() const {
+
+    return receiveBuffer.find('\n') != std::string::npos;
 
 }
 
@@ -393,5 +401,47 @@ Should go inside Socket::send:
 
     // Return full string
     return std::string(buffer, bytesReceived);
+
+*/
+
+/*
+
+Old receive method
+
+// Temporary buffer to capture bytes that were received
+    char buffer[4096];
+
+    // Receive the above bytes
+    int bytesReceived = ::recv(socketFD, buffer, sizeof(buffer), 0);
+
+    // If error occurs
+    if (bytesReceived <= 0)  {
+
+        // Return empty string to signal error
+        return "";
+
+    }
+
+    // Add above bytes to the final buffer
+    receiveBuffer.append(buffer, bytesReceived);
+
+    // Check for new line (delimiter)
+    size_t delimiter = receiveBuffer.find('\n');
+
+    // If no delimiter found them message has not been fully transmitted
+    if (delimiter == std::string::npos) {
+
+        return "";
+
+    }
+
+    // Otherwise extract the entire message (everything before the delimiter)
+    std::string message = receiveBuffer.substr(0, delimiter);
+
+    // Remove the entire message and its delimiter from buffer
+    receiveBuffer.erase(0, delimiter + 1);
+
+    // Return the full single protocol message
+    return message;
 
 */

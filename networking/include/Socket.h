@@ -46,6 +46,9 @@ class Socket {
     // Check whether there is data waiting to be read
     bool hasData() const;
 
+    // Check whether buffered data is waiting
+    bool hasBufferedMessage() const;
+
     // Accept an incomming connection
     Socket accept();
 

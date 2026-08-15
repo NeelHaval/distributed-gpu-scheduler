@@ -368,6 +368,34 @@ Therefore, when building an application protocol on top of TCP, the **message fr
 
 For this project, the newline (`\n`) was chosen as the messaging protocols are text based and do not require newlines.
 
+## 10/08/2026
+
+Intermittent issue observed during multi-job testing. Appeared related to TCP 
+receive timing/framing, but could not consistently reproduce and subsequent 
+runs completed all queued jobs correctly. Investigate if it reappears.
+
+## 11/08/2026
+
+Known limitation: Jobs that exceed the resource capacity of all registered workers 
+remain queued and are repeatedly retried. Later scheduling/failure-handling phases 
+should distinguish temporarily unavailable resources from permanently unschedulable 
+jobs.
+
+## 15/08/2026
+
+### TCP Message Framing Bug
+
+A bug occurred when a worker sent multiple protocol messages (`STARTED` and 
+`COMPLETE`) in quick succession. Since TCP is a byte stream, both messages 
+could be received by a single `recv()` call. The original `Socket::receive()` 
+extracted only the first message and stored the remaining data in 
+`receiveBuffer`, but the scheduler's `hasData()` only checked the underlying 
+socket, so it could fail to notice the buffered `COMPLETE` message. This caused 
+the worker to remain marked as busy and prevented its completion from being 
+processed. The fix was to make `receive()` process messages already present in
+ `receiveBuffer` before calling `recv()`, and to add `hasBufferedMessage()` 
+ so `Scheduler::listenToWorkers()` continues processing until all complete 
+ buffered messages have been consumed.
 
 ## Ongoing decisions:
 
