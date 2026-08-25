@@ -166,7 +166,7 @@ bool Scheduler::completeJob(const std::string& jobID) {
     // Mark this job completed
     jobIt->second.markCompleted();
 
-    // Move this job completed jobs
+    // Move this job to completed jobs
     auto result = completedJobs.emplace(jobID, jobIt->second);
 
     if (!result.second) {

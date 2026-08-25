@@ -116,8 +116,6 @@ bool Socket::send(const std::string& data) {
 
 }
 
-// Note that this method does not support preserving messages. This must be solved
-// in future phases using message framing.
 // Method to receive protocol messages
 std::string Socket::receive() {
 
