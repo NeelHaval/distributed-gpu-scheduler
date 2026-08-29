@@ -5,7 +5,7 @@
 
 // Constructor to initialise Job object
 Job::Job(const std::string& jobID, int requiredGPUs, size_t requiredMem, int requiredCPUs,
-    const std::string& payload, JobPriority priority)
+    const std::string& payload, int executionTimeMs, JobPriority priority)
 
     :
 
@@ -20,7 +20,8 @@ Job::Job(const std::string& jobID, int requiredGPUs, size_t requiredMem, int req
     state(JobState::Submitted),
     retryCount(0),
     expectedDuration(0),
-    workerID("")
+    workerID(""),
+    executionTimeMs(executionTimeMs)
 
     {
 
@@ -57,7 +58,8 @@ std::string Job::serialize() const {
      + "|" + std::to_string(requiredMem) + "|" + payload
      + "|" + std::to_string(static_cast<int>(priority))
      + "|" + std::to_string(static_cast<int>(state))
-     + "|" + std::to_string(retryCount) + "|" + std::to_string(expectedDuration)
+     + "|" + std::to_string(retryCount) + "|" + std::to_string(expectedDuration) 
+     + "|" + std::to_string(executionTimeMs)
      + "|" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(
                submissionTime.time_since_epoch()).count());
 
@@ -99,7 +101,7 @@ Job Job::deserialize(const std::string& data) {
     JobPriority priority = static_cast<JobPriority>(std::stoi(token));
 
     // Create instance of Job using constructor to populate above basic variables
-    Job job(JobID, requiredGPUs, requiredMem, requiredCPUs, payload, priority);
+    Job job(JobID, requiredGPUs, requiredMem, requiredCPUs, payload, 0, priority);
 
     // state
     std::getline(ss, token, '|');
@@ -112,6 +114,10 @@ Job Job::deserialize(const std::string& data) {
     // expectedDuration
     std::getline(ss, token, '|');
     job.expectedDuration = std::stoi(token);
+
+    // executionTimeMs
+    std::getline(ss, token, '|');
+    job.executionTimeMs = std::stoi(token);
 
     // submissionTime
     std::getline(ss, token, '|');
@@ -165,6 +171,13 @@ int Job::getRequiredGPUs() const {
 int Job::getRequiredMem() const {
 
     return requiredMem;
+
+}
+
+// Get execution time
+int Job::getExecutionTimeMs() const {
+
+    return executionTimeMs;
 
 }
 

@@ -35,7 +35,7 @@ class Job {
     
     // Constructor
     Job(const std::string& jobID, int requiredGPUs, size_t requiredMem, int requiredCPUs,
-    const std::string& payload, JobPriority priority = JobPriority::Normal);
+    const std::string& payload, int executionTimeMs, JobPriority priority = JobPriority::Normal);
 
     // Serialize/Deserialize needed for RPC, networking and logging
     std::string serialize() const;
@@ -67,6 +67,9 @@ class Job {
     // Get current workerID
     std::string getWorkerID() const;
 
+    // Get execution time
+    int getExecutionTimeMs() const;
+
     // Assign worker to job
     void assignWorker(const std::string& data);
 
@@ -84,5 +87,6 @@ class Job {
     JobState state;
     int retryCount;
     std::chrono::steady_clock::time_point duration;
+    int executionTimeMs;
 
 };

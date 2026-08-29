@@ -9,6 +9,8 @@ add_subdirectory(common)
 add_subdirectory(networking)
 add_subdirectory(worker)
 add_subdirectory(scheduler)
+add_subdirectory(jobLoader)
+add_subdirectory(benchmarks)
 #add_subdirectory(external/googletest)
 #add_subdirectory(tests)
 
@@ -24,6 +26,8 @@ target_link_libraries(gpu_scheduler
     worker
     common
     networking
+    jobLoader
+    benchmarks
 )
 
 add_executable(client_app 

@@ -377,3 +377,15 @@ int Scheduler::workerCount() const {
     return registeredWorkers.size();
 
 }
+
+// Getter for submitted and completed jobs
+int Scheduler::getJobsSubmitted() const {
+
+    return jobsSubmitted;
+
+}
+int Scheduler::getJobsCompleted() const {
+
+    return jobsCompleted;
+
+}

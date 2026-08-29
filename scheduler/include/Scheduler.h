@@ -49,6 +49,10 @@ class Scheduler {
     // Getter for schedulers updated live copy of a job object in runningJobs
     const Job* getRunningJob(const std::string& id) const;
 
+    // Get jobs submitted and completed
+    int getJobsSubmitted() const;
+    int getJobsCompleted() const;
+
     private:
 
     // Vector containing current registered workers

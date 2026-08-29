@@ -1,6 +1,8 @@
 #include "Worker.h"
 #include <algorithm>
 #include <iostream>
+#include <thread>
+#include <chrono>
 
 // Constructor to initialise Worker object
 Worker::Worker(const std::string& workerID, int totalCPUs, int totalGPUs, 
@@ -97,6 +99,9 @@ bool Worker::executeJob(Job& job) {
     std::string message = "STARTED|" + job.getJobID();
 
     client.send(message);
+
+    // Simulate delay execution time
+    std::this_thread::sleep_for(std::chrono::milliseconds(job.getExecutionTimeMs()));
 
     // Job allocation successful
     return true;

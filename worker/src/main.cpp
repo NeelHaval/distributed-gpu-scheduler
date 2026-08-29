@@ -66,14 +66,20 @@ int main() {
     // Note 16384 is 16GB
     Worker worker1("worker1", 8, 1, 16384);
     Worker worker2("worker2", 8, 1, 16384);
+    Worker worker3("worker3", 8, 1, 16384);
+    Worker worker4("worker4", 8, 1, 16384);
 
-    // Start two threads
+    // Start four threads
     std::thread t1(workerThread, std::ref(worker1));
     std::thread t2(workerThread, std::ref(worker2));
+    std::thread t3(workerThread, std::ref(worker3));
+    std::thread t4(workerThread, std::ref(worker4));
 
     // Resume exectution following thread completion
     t1.join();
     t2.join();
+    t3.join();
+    t4.join();
 
     // Signal that connected to scheduler
     std::cout << "Connected to scheduler.\n";

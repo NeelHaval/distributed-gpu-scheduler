@@ -1,10 +1,12 @@
 #include <iostream>
 #include <winsock2.h>
 #include <sstream>
+#include <vector>
 #include "Scheduler.h"
 #include "Server.h"
 #include "WorkerInfo.h"
-#include "Job.h"
+#include "JobLoader.h"
+#include "Benchmark.h"
 
 // Method to parse registration
 WorkerInfo parseRegistration(std::string message) {
@@ -88,52 +90,21 @@ int main() {
     // Print listening port successful status
     std::cout << "Listening to port 5000\n";
 
-    // Jobs to test worker acceptance and rejection of jobs
-    Job job1(
-        "job1",
-        1,          // required GPUs
-        1024,       // required memory
-        2,          // required CPUs
-        "payload1",
-        JobPriority::Normal
-    );
+    // Load jobs from jobs file
+    std::vector<Job> jobs = loadJobsFromFile("testJobs/jobs.txt");
 
-    Job job2(
-        "job2",
-        1,
-        1024,
-        2,
-        "payload2",
-        JobPriority::Normal
-    );
+    // Signal load
+    std::cout << "Loaded " << jobs.size() << " jobs.\n";
 
-    Job job3(
-        "job3",
-        1,
-        1024,
-        2,
-        "payload3",
-        JobPriority::Normal
-    );
+    // Start benchmark immediately before job submission
+    // Makespan measures the total time required to process all jobs
+    Benchmark benchmark(4);
 
-    Job job4(
-        "job4",
-        1,
-        1024,
-        2,
-        "payload4",
-        JobPriority::Normal
-    );
+    // Wait for expected workers
+    std::cout << "Waiting for " << benchmark.getExpectedWorkers() << " workers...\n";
 
-    scheduler.submitJob(job1);
-    scheduler.submitJob(job2);
-    scheduler.submitJob(job3);
-    scheduler.submitJob(job4);
-
-    // Keep listening for new workers
-    while (true) {
-
-// XXXX        std::cout << "Checking for incoming worker...\n";
+    // Register workers first
+    while (scheduler.workerCount() < benchmark.getExpectedWorkers()) {
 
         // Check for new worker
         if (server.hasIncomingClient()) {
@@ -152,7 +123,7 @@ int main() {
             // Print status
             std::cout << "Received" << message.size() << " bytes.\n";
 
-            // Perse the registration message
+            // Parse the registration message
             WorkerInfo worker = parseRegistration(message);
 
             // Fully register
@@ -178,24 +149,76 @@ int main() {
             // Print status
             std::cout << "Registered worker: " << worker.workerID << "\n";
 
-            // Trial: Assign different jobs to workers
-            std::string jobID = "job_" + worker.workerID;
-
-            // Test job TRIAL ONLY TRIAL ONLY TRIAL ONLY
-            /*
-            Job testJob(
-                jobID,
-                1,          // required GPUs
-                1024,       // required memory MB
-                2,          // required CPUs
-                "test_payload",
-                JobPriority::Normal
-            );
-            scheduler.submitJob(testJob);
-            */
-
         }
 
+    }
+
+    // Final worker connection signal
+    std::cout << "\nAll expected workers connected.\n";
+    std::cout << "Starting benchmark...\n";
+
+    benchmark.start();
+
+    // Submit each job
+    for (const Job& job : jobs) {
+
+        scheduler.submitJob(job);
+
+    }
+
+    // Note that the following while loop condition is for benchmarking only 
+    // and in the future it will be changed to simply true. ALso uncomment the if
+    // statement after benchmarking.
+    // Keep listening for new workers
+    while (scheduler.getJobsCompleted() < scheduler.getJobsSubmitted()) {
+
+// XXXX        std::cout << "Checking for incoming worker...\n";
+        /*
+        // Check for new worker
+        if (server.hasIncomingClient()) {
+
+            std::cout << "Incoming worker detected.\n";
+
+            // If present accept
+            Socket workerSocket = server.acceptClient();
+
+            // Print status message
+            std::cout << "Worker connected.\n";
+
+            // Receive registration
+            std::string message = workerSocket.receive();
+
+            // Print status
+            std::cout << "Received" << message.size() << " bytes.\n";
+
+            // Parse the registration message
+            WorkerInfo worker = parseRegistration(message);
+
+            // Fully register
+            scheduler.registerWorker(worker);
+
+            // TRIAL
+            std::cout << "REGISTERED WORKER: " << worker.workerID << "\n";
+            // TRIAL
+
+            // TRIAL
+            std::cout << "Accepted worker socket FD: "
+          << workerSocket.getFD()
+          << "\n";
+          // TRIAL
+
+            // Store the socket associated with workerID
+            scheduler.registerWorkerSocket(worker.workerID, std::move(workerSocket));
+
+            // TRIAL
+            std::cout << "REGISTERED SOCKET FOR: " << worker.workerID << "\n";
+            // TRIAL
+
+            // Print status
+            std::cout << "Registered worker: " << worker.workerID << "\n";
+
+        }
+        */
         // Continue checking for existing worker messages
         scheduler.listenToWorkers();
 
@@ -203,6 +226,12 @@ int main() {
         scheduler.schedule();
 
     }
+
+    // Stop timer as all jobs have completed
+    benchmark.stop();
+
+    // Print result
+    benchmark.printResult("Initial Test");
 
     // Shut down winsock
     WSACleanup();

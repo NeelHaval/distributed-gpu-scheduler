@@ -7,8 +7,7 @@ int main() {
     std::cout << "Starting client...\n";
 
     // Create job object
-    Job job("jobA", 1, 4000, 2, "train_model.py");
-
+    Job job("jobA", 1, 4000, 2, "train_model.py", 5000);
     // Print details about job
     std::cout << "Created job:\n";
     std::cout << "ID: jobA\n";
