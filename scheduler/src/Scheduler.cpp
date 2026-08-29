@@ -96,7 +96,37 @@ void Scheduler::listenToWorkers() {
                 std::string jobID = message.substr(8);
 
                 // Record teh time at which scheduler recieved the started message
-                jobStartTimes[jobID] = std::chrono::steady_clock::now();
+                auto startTime = std::chrono::steady_clock::now();
+
+                jobStartTimes[jobID] = startTime;
+
+                // Find the respective job submit time
+                auto submitIt = jobSubmitTimes.find(jobID);
+
+                // If job submit time found calculate queueing time
+                if (submitIt != jobSubmitTimes.end()) {
+
+                    double queueTimeMs = std::chrono::duration<double, std::milli>(
+
+                        startTime - submitIt->second
+
+                    ).count();
+
+                    std::cout << "Job queueing time: "
+                              << queueTimeMs
+                              << " ms\n";
+
+                    // Check benchmark pointer points to object before access
+                    if (benchmark != nullptr) {
+
+                        benchmark->recordQueueTime(jobID, queueTimeMs);
+
+                    }
+
+                    // Erase the submission time stamp once used
+                    jobSubmitTimes.erase(submitIt);
+
+                }
 
                 // Print status
                 std::cout << "Worker " << workerID << " started job " << jobID << "\n";
@@ -160,6 +190,9 @@ void Scheduler::submitJob(const Job& job) {
 
     // Update job state to Queued
     queuedJob.updateState(JobState::Queued);
+
+    // Immediately after the job is queues begin timer
+    jobSubmitTimes[job.getJobID()] = std::chrono::steady_clock::now();
 
     // Queue this job
     jobQueue.push(queuedJob);

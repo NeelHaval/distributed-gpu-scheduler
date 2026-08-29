@@ -39,6 +39,12 @@ public:
     // Get cluster level worker utilisation
     double getWorkerUtil() const;
 
+    // Record the queueing time for a job
+    void recordQueueTime(const std::string& jobID, double durationMs);
+
+    // Calculate average queueing time
+    double getAverageQueueTime() const;
+
 // Private variables
 private:
 
@@ -51,5 +57,8 @@ private:
 
     // Store the measured execution time for each job in the respective entry
     std::vector<double> jobTimes;
+
+    // Store queueing time for each job
+    std::vector<double> queueTimes;
 
 };

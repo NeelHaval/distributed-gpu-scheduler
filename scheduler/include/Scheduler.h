@@ -65,6 +65,9 @@ class Scheduler {
     // Benchmark used to hold job execution times
     Benchmark* benchmark;
 
+    // Begin recording when each job enters the scheduler
+    std::unordered_map<std::string, std::chrono::steady_clock::time_point> jobSubmitTimes;
+
     // Begin recording for each job
     std::unordered_map<std::string, std::chrono::steady_clock::time_point> jobStartTimes;
 

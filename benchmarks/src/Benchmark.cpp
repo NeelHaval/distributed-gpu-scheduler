@@ -105,6 +105,10 @@ void Benchmark::printResult(const std::string& workloadName, int completedJobs) 
               << getWorkerUtil()
               << " %\n";
 
+    std::cout << "Average queueing time: "
+              << getAverageQueueTime()
+              << " ms\n";
+
     std::cout << "================================\n";
 
 }
@@ -140,6 +144,36 @@ double Benchmark::getWorkerUtil() const {
 
     // Otherwise return utilisation (%)
     return (totalWorkerBusyTime / totalAvailableWorkerTime) * 100.0;
+
+}
+
+// Record the queueing time for a job
+void Benchmark::recordQueueTime(const std::string& jobID, double durationMs) {
+
+    queueTimes.push_back(durationMs);
+
+}
+
+// Calculate average queueing time
+double Benchmark::getAverageQueueTime() const {
+
+    if (queueTimes.empty()) {
+
+        return 0.0;
+
+    }
+
+    // Variable to hold total queueing time
+    double total = 0.0;
+
+    // Calculate average and return appropriate value
+    for (double time : queueTimes) {
+
+        total += time;
+
+    }
+
+    return total / queueTimes.size();
 
 }
 
