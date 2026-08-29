@@ -9,4 +9,5 @@ target_link_libraries(scheduler
     common
     worker
     networking
+    benchmarks
 )

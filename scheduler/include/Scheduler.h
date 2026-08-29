@@ -6,11 +6,18 @@
 #include "WorkerInfo.h"
 #include "Socket.h"
 #include "Messages.h"
+#include <chrono>
 
-// Class interface
+// Benchmark class decleration
+class Benchmark;
+
+// Scheduler class interface
 class Scheduler {
 
     public:
+
+    // Connect benchmark to scheduler
+    void setBenchmark(Benchmark* benchmark);
 
     // Constructor
     Scheduler();
@@ -54,6 +61,12 @@ class Scheduler {
     int getJobsCompleted() const;
 
     private:
+
+    // Benchmark used to hold job execution times
+    Benchmark* benchmark;
+
+    // Begin recording for each job
+    std::unordered_map<std::string, std::chrono::steady_clock::time_point> jobStartTimes;
 
     // Vector containing current registered workers
     std::unordered_map<std::string, WorkerInfo> registeredWorkers;

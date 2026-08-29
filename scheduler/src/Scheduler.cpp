@@ -1,6 +1,7 @@
 #include "Scheduler.h"
 #include <utility>
 #include <iostream>
+#include "Benchmark.h"
 
 // Constructor to initialise private variables
 Scheduler::Scheduler()
@@ -10,11 +11,19 @@ Scheduler::Scheduler()
                     jobsSubmitted(0),
                     jobsCompleted(0),
                     workersRegistered(0),
-                    jobsFailed(0)
+                    jobsFailed(0),
+                    benchmark(nullptr)
 
                     {
 
                     }
+
+// Connect benchmark to scheduler
+void Scheduler::setBenchmark(Benchmark* benchmark) {
+
+    this->benchmark = benchmark;
+
+}
 
 // Register worker - for phase one simply record using registeredWorkers
 void Scheduler::registerWorker(const WorkerInfo& worker) {
@@ -27,7 +36,7 @@ void Scheduler::registerWorker(const WorkerInfo& worker) {
         workersRegistered++;
 
     }
-    
+
     // Note that this method is strictly a phase 1 implementation.
     // It does not handle the possibility of duplicate workers which becomes
     // a real concern in later phases. Therefore, find mechanism to deal with
@@ -81,6 +90,18 @@ void Scheduler::listenToWorkers() {
             // Print status
             std::cout << "Received from " << workerID << ": " << message << "\n";
 
+            // Handle job started message
+            if (message.rfind("STARTED|", 0) == 0) {
+
+                std::string jobID = message.substr(8);
+
+                // Record teh time at which scheduler recieved the started message
+                jobStartTimes[jobID] = std::chrono::steady_clock::now();
+
+                // Print status
+                std::cout << "Worker " << workerID << " started job " << jobID << "\n";
+
+            }
 
             // Handle completed jobs
             if (message.rfind("COMPLETE|", 0) == 0) {
@@ -91,6 +112,31 @@ void Scheduler::listenToWorkers() {
                 // Print status
                 std::cout << "Worker " << workerID << " completed job " << jobID
                           << "\n";
+
+                // Find the start time for the current job
+                auto startIt = jobStartTimes.find(jobID);
+
+                // If found record the job completion time
+                if ( startIt != jobStartTimes.end()) {
+
+                    auto endTime = std::chrono::steady_clock::now();
+                    double durationMs = std::chrono::duration<double, std::milli>(
+                        endTime - startIt->second
+                    ).count();
+
+                    // Print execution time
+                    std::cout << "Job execution time: " << durationMs << " ms\n";
+
+                    if (benchmark != nullptr) {
+
+                        benchmark->recordJobTime(jobID, durationMs);
+
+                    }
+
+                    // Remove from jobStartTimes
+                    jobStartTimes.erase(startIt);
+
+                }
 
                 // Complete the job on the schedulers side
                 completeJob(jobID);

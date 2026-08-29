@@ -100,6 +100,9 @@ int main() {
     // Makespan measures the total time required to process all jobs
     Benchmark benchmark(4);
 
+    // Avoid creating a new benchmark object
+    scheduler.setBenchmark(&benchmark);
+
     // Wait for expected workers
     std::cout << "Waiting for " << benchmark.getExpectedWorkers() << " workers...\n";
 

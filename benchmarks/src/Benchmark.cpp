@@ -32,6 +32,37 @@ double Benchmark::getElapsedMilliseconds() const {
 
 }
 
+// Calculate the job execution time
+void Benchmark::recordJobTime(const std::string& jobID, double durationMs) {
+
+    jobTimes.push_back(durationMs);
+
+}
+
+// Calculate average job execution metric
+double Benchmark::getAverageJobTime() const {
+
+    // If no jobs were submitted/completed
+    if (jobTimes.empty()) {
+
+        return 0.0;
+
+    }
+
+    // Variable to store total time
+    double totalTime = 0.0;
+
+    // Calculate average
+    for (double time : jobTimes) {
+
+        totalTime+= time;
+
+    }
+
+    return totalTime / jobTimes.size();
+
+}
+
 // Print result to terminal
 void Benchmark::printResult(const std::string& workloadName) const {
 
@@ -41,6 +72,11 @@ void Benchmark::printResult(const std::string& workloadName) const {
               << std::fixed
               << std::setprecision(2)
               << getElapsedMilliseconds()
+              << " ms\n";
+    std::cout << "Average job time: "
+              << std::fixed
+              << std::setprecision(2)
+              << getAverageJobTime()
               << " ms\n";
     std::cout << "================================\n";
 
