@@ -22,7 +22,7 @@ public:
     double getElapsedMilliseconds() const;
 
     // Print result to terminal
-    void printResult(const std::string& workloadName) const;
+    void printResult(const std::string& workloadName, int completedJobs) const;
 
     // Getter for expected workers
     int getExpectedWorkers() const;
@@ -32,6 +32,9 @@ public:
 
     // Calculate average job execution metric
     double getAverageJobTime() const;
+
+    // Get the throughput
+    double getThroughput(int completedJobs) const;
 
 // Private variables
 private:

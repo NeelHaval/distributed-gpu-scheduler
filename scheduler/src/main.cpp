@@ -234,7 +234,7 @@ int main() {
     benchmark.stop();
 
     // Print result
-    benchmark.printResult("Initial Test");
+    benchmark.printResult("Initial Test", scheduler.getJobsCompleted());
 
     // Shut down winsock
     WSACleanup();

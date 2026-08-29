@@ -39,6 +39,22 @@ void Benchmark::recordJobTime(const std::string& jobID, double durationMs) {
 
 }
 
+// Get the throughput
+double Benchmark::getThroughput(int completedJobs) const {
+
+    double elapsedSeconds = getElapsedMilliseconds() / 1000.0;
+
+    if (elapsedSeconds <= 0.0) {
+
+        return 0.0;
+
+    }
+
+    // Throughput is jobs per second
+    return completedJobs / elapsedSeconds;
+
+}
+
 // Calculate average job execution metric
 double Benchmark::getAverageJobTime() const {
 
@@ -64,7 +80,7 @@ double Benchmark::getAverageJobTime() const {
 }
 
 // Print result to terminal
-void Benchmark::printResult(const std::string& workloadName) const {
+void Benchmark::printResult(const std::string& workloadName, int completedJobs) const {
 
     std::cout << "\n========== BENCHMARK ==========\n";
     std::cout << "Workload: " << workloadName << "\n";
@@ -78,6 +94,9 @@ void Benchmark::printResult(const std::string& workloadName) const {
               << std::setprecision(2)
               << getAverageJobTime()
               << " ms\n";
+    std::cout << "Throughput: "
+              << getThroughput(completedJobs)
+              << " jobs/second\n";
     std::cout << "================================\n";
 
 }
