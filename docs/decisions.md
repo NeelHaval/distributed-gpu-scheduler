@@ -397,6 +397,21 @@ processed. The fix was to make `receive()` process messages already present in
  so `Scheduler::listenToWorkers()` continues processing until all complete 
  buffered messages have been consumed.
 
+## 29/08/2026
+
+### Utilisation metrics
+
+As a metric to measure utilisation, cluster - level utilisation was used before phase 4 and the introduction of a smarter scheduling algorithm. This is because the workers initially only executed one job at a time and so an 
+instantaneous GPU metric - such as SM occupancy or memory pressure - would not have been meaningful as they would just mirror job stop and start times.
+<br>
+
+**Cluster - Level utilisation:**<br>
+$$
+\text{Cluster Utilisation} = \frac{\sum \text{job runtimes}}{\text{number of workers} \times \text{makespan}}
+$$
+
+The formula above gives a clear scheduling efficiency at this stage. Once workers support multiple concurrent jobs, instantaneous utilisation may be considered to investigate finer behaviour on a worker by worker basis. The two metrics are compatible: Cluster - level utilisation is the time averaged form of instantaneous utilisation, so this early metric shown above is a useful baseline for future comparisons with instantaneous worker utilisation.
+
 ## Ongoing decisions:
 
 - C++ networking library?

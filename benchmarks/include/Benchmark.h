@@ -36,6 +36,9 @@ public:
     // Get the throughput
     double getThroughput(int completedJobs) const;
 
+    // Get cluster level worker utilisation
+    double getWorkerUtil() const;
+
 // Private variables
 private:
 

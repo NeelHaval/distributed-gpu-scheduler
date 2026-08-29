@@ -83,21 +83,63 @@ double Benchmark::getAverageJobTime() const {
 void Benchmark::printResult(const std::string& workloadName, int completedJobs) const {
 
     std::cout << "\n========== BENCHMARK ==========\n";
+
     std::cout << "Workload: " << workloadName << "\n";
     std::cout << "Completion time: "
               << std::fixed
               << std::setprecision(2)
               << getElapsedMilliseconds()
               << " ms\n";
+              
     std::cout << "Average job time: "
               << std::fixed
               << std::setprecision(2)
               << getAverageJobTime()
               << " ms\n";
+
     std::cout << "Throughput: "
               << getThroughput(completedJobs)
               << " jobs/second\n";
+
+    std::cout << "Worker utilisation: "
+              << getWorkerUtil()
+              << " %\n";
+
     std::cout << "================================\n";
+
+}
+
+// Get cluster level worker utilisation
+double Benchmark::getWorkerUtil() const {
+
+    // In case of error with input
+    if (expectedWorkers <= 0) {
+
+        return 0.0;
+
+    }
+
+    // Variable to record cumulative working time for all workers
+    double totalWorkerBusyTime = 0.0;
+
+    // Calculate total busy worker time
+    for (double jobTime : jobTimes) {
+
+        totalWorkerBusyTime += jobTime;
+
+    }
+
+    double totalAvailableWorkerTime = expectedWorkers * getElapsedMilliseconds();
+
+    // If total available worker <= 0.0, then error has occured
+    if (totalAvailableWorkerTime <= 0.0) {
+
+        return 0.0;
+
+    }
+
+    // Otherwise return utilisation (%)
+    return (totalWorkerBusyTime / totalAvailableWorkerTime) * 100.0;
 
 }
 
