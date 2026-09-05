@@ -20,9 +20,16 @@ void workerThread(Worker& worker) {
     worker.registerWorker();
 
     // Worker stays alive after registering
-    while (true) {
+    while (worker.isRunning()) {
 
         std::string message = worker.receiveMessages();
+
+        // If empty message then worker connection was closed
+        if (message.empty()) {
+
+            break;
+
+        }
 
         std::cout << "Received message: "
           << message
@@ -37,15 +44,14 @@ void workerThread(Worker& worker) {
             // Retrieve job characteristics and assign to new Job object
             Job job = Job::deserialize(message);
 
-            // Execute job
-            worker.executeJob(job);
-
-            // Signal complete
-            worker.completeJob(job);
+            // Execute and complete job
+            worker.startJob(std::move(job));
 
         }
 
     }
+
+    std::cout << "Worker thread shutting down!\n";
 
 }
 
@@ -64,10 +70,10 @@ int main() {
 
     // Initialise worker objects
     // Note 16384 is 16GB
-    Worker worker1("worker1", 8, 1, 16384);
-    Worker worker2("worker2", 8, 1, 16384);
-    Worker worker3("worker3", 8, 1, 16384);
-    Worker worker4("worker4", 8, 1, 16384);
+    Worker worker1("worker1", 8, 10, 16384);
+    Worker worker2("worker2", 8, 10, 16384);
+    Worker worker3("worker3", 8, 10, 16384);
+    Worker worker4("worker4", 8, 10, 16384);
 
     // Start four threads
     std::thread t1(workerThread, std::ref(worker1));
@@ -75,14 +81,21 @@ int main() {
     std::thread t3(workerThread, std::ref(worker3));
     std::thread t4(workerThread, std::ref(worker4));
 
-    // Resume exectution following thread completion
+    std::cout << "Workers started. Press ENTER to shut them down.\n";
+
+    std::cin.get();
+
+    // Shut down each worker following terminal input (Close TCP connection)
+    worker1.stop();
+    worker2.stop();
+    worker3.stop();
+    worker4.stop();
+
+    // Stop each of the worker threads
     t1.join();
     t2.join();
     t3.join();
     t4.join();
-
-    // Signal that connected to scheduler
-    std::cout << "Connected to scheduler.\n";
 
     // Shut down winsock
     WSACleanup();

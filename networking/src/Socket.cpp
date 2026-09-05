@@ -252,11 +252,12 @@ bool Socket::connect(const std::string& ip, int port) {
 
 }
 //////////
-// Clost socket
+// Close socket
 void Socket::close() {
 
     if (socketFD != -1) {
 
+        shutdown(socketFD, SD_BOTH);
         closesocket(socketFD);
         socketFD = -1;
 

@@ -29,9 +29,6 @@ Worker::Worker(const std::string& workerID, int totalCPUs, int totalGPUs,
                // State
                state(WorkerState::Idle),
 
-               // Executing job
-               currentJobID(""),
-
                // Worker heartbeat monitoring
                lastHeartbeat(std::chrono::steady_clock::now()),
 
@@ -42,6 +39,13 @@ Worker::Worker(const std::string& workerID, int totalCPUs, int totalGPUs,
                {
                 
                }
+
+// Destructor
+Worker::~Worker() {
+
+    stop();
+
+}
 
 // Method allowing worker to connect to scheduler
 bool Worker::connectToScheduler(const std::string& ip, int port) {
@@ -76,29 +80,37 @@ void Worker::registerWorker() {
 // Execute job - for phase 1 could end up in partially updated state if exception thrown
 bool Worker::executeJob(Job& job) {
 
-    // Return false if insufficient resources
-    if (!checkResources(job.getRequiredCPUs(), job.getRequiredGPUs(), job.getRequiredMem())) {
+    // Set up local scope to allow lock_guard object to protect resources
+    {
 
-        // Job allocation unsuccessful due to insufficient resources
-        return false;
+        // Lock_guard object
+        std::lock_guard<std::mutex> lock(resourceMutex);
 
-        // Resource allocation failures do not count as execution failures.
+        // Return false if insufficient resources
+        if (!checkResources(job.getRequiredCPUs(), job.getRequiredGPUs(), job.getRequiredMem())) {
+
+            // Job allocation unsuccessful due to insufficient resources
+            return false;
+
+            // Resource allocation failures do not count as execution failures.
+
+        }
+
+        // Assign resources
+        assignResources(job.getRequiredCPUs(), job.getRequiredGPUs(), job.getRequiredMem());
+
+        // Update currentJobID
+        activeJobIDs.insert(job.getJobID());
+
+        // Worker becomes busy
+        updateState(WorkerState::Busy);
 
     }
-
-    // Assign resources
-    assignResources(job.getRequiredCPUs(), job.getRequiredGPUs(), job.getRequiredMem());
-
-    // Update currentJobID
-    currentJobID = job.getJobID();
-
-    // Worker becomes busy
-    updateState(WorkerState::Busy);
 
     // Signal to scheduler that job has started
     std::string message = "STARTED|" + job.getJobID();
 
-    client.send(message);
+    sendMessage(message);
 
     // Simulate delay execution time
     std::this_thread::sleep_for(std::chrono::milliseconds(job.getExecutionTimeMs()));
@@ -112,26 +124,39 @@ bool Worker::executeJob(Job& job) {
 // May not need entire job object for paramter in future
 bool Worker::completeJob(Job& job) {
 
-    if (currentJobID != job.getJobID()) {
+    // Set up local scope to allow lock_guard object to protect resources
+    {
 
-        return false;
+        // Lock_guard object
+        std::lock_guard<std::mutex> lock(resourceMutex);
+
+        // If the worker was executing no such job
+        if (activeJobIDs.find(job.getJobID()) == activeJobIDs.end()) {
+
+            return false;
+
+        }
+
+        // Erase this job
+        activeJobIDs.erase(job.getJobID());
+
+        // Free resources
+        freeResources(job.getRequiredCPUs(), job.getRequiredGPUs(), job.getRequiredMem());
+
+        // Worker becomes idle if no jobs being executed
+        if (getActiveJobCount() == 0) {
+
+            updateState(WorkerState::Idle);
+
+        }
 
     }
-
-    // Free resources
-    freeResources(job.getRequiredCPUs(), job.getRequiredGPUs(), job.getRequiredMem());
-
-    // Reset jobID
-    currentJobID = "";
-
-    // Worker becomes idle
-    updateState(WorkerState::Idle);
 
     jobsCompleted++;
 
     // Signal to scheduler that job complete
     std::string message = "COMPLETE|" + job.getJobID();
-    client.send(message);
+    sendMessage(message);
 
     return true;
 
@@ -185,9 +210,9 @@ std::string Worker::getWorkerID() const {
 }
 
 // Current jobID
-std::string Worker::getCurrentJobID() const {
+size_t Worker::getActiveJobCount() const {
 
-    return currentJobID;
+    return activeJobIDs.size();
 
 }
 
@@ -216,5 +241,60 @@ int Worker::getAvailableMem() const {
 WorkerState Worker::getState() const {
 
     return state;
+
+}
+
+// Send message with mutex
+void Worker::sendMessage(const std::string& message) {
+
+    std::lock_guard<std::mutex> lock(sendMutex);
+    client.send(message);
+
+}
+
+// Execute and complete job on its own thread
+void Worker::startJob(Job job) {
+
+    jobThreads.emplace_back([this, job]() mutable {
+
+        if (executeJob(job)) {
+
+            completeJob(job);
+
+        }
+
+    });
+
+}
+
+// Stop worker and join all job threads
+void Worker::stop() {
+
+    // Stop worker recieve loop
+    running = false;
+
+    // Officially disconnect from the scheduler
+    client.disconnect();
+
+    // Finish all job threads
+    for (std::thread& thread : jobThreads) {
+
+        if (thread.joinable()) {
+
+            thread.join();
+
+        }
+
+    }
+
+    // Remove completed thread objects
+    jobThreads.clear();
+
+}
+
+// Check if worker running
+bool Worker::isRunning() const {
+
+    return running;
 
 }

@@ -384,12 +384,6 @@ WorkerInfo* Scheduler::findAvailableWorker(const Job& job) {
           << "\n";
           // TRIAL
 */
-        // Find a worker which is currently free
-        if (worker.state != WorkerState::Idle) {
-
-            continue;
-
-        }
 
         // TRIAL
         std::cout << "Worker resources: "

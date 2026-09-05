@@ -4,6 +4,12 @@
 #include "Job.h"
 #include "Client.h"
 #include "WorkerState.h"
+#include <unordered_set>
+#include <mutex>
+#include <vector>
+#include <thread>
+#include <atomic>
+
 /*
 // Worker state
 enum class WorkerState {
@@ -25,6 +31,9 @@ class Worker {
 
     // Constructor
     Worker(const std::string& workerID, int totalCPUs, int totalGPUs, size_t totalMem);
+
+    // Destructor
+    ~Worker();
 
     // Required Methods:
 
@@ -56,7 +65,7 @@ class Worker {
     std::string getWorkerID() const;
 
     // Current jobID
-    std::string getCurrentJobID() const;
+    size_t getActiveJobCount() const;
 
     // Available CPU resources
     int getAvailableCPUs() const;
@@ -69,6 +78,18 @@ class Worker {
 
     // Current state
     WorkerState getState() const;
+
+    // Send message with mutex
+    void sendMessage(const std::string& message);
+    
+    // Execute and complete job on its own thread
+    void startJob(Job job);
+
+    // Stop worker and join all job threads
+    void stop();
+
+    // Check if a worker is currently running
+    bool isRunning() const;
 
     /* 
     Later add these methods:
@@ -88,8 +109,21 @@ class Worker {
     std::string IPAddress;
     std::string portNumber;
 
-    // Current job
-    std::string currentJobID;
+    // Current jobs
+    std::unordered_set<std::string> activeJobIDs;
+
+    // Protects resources and active jobs
+    std::mutex resourceMutex;
+
+    // Prevents multiple jobs threads from writing to the TCP connection at the
+    // same time
+    std::mutex sendMutex;
+
+    // Keep execution threads alive instead of detaching them
+    std::vector<std::thread> jobThreads;
+
+    // Control worker shut down
+    std::atomic<bool> running{true};
 
     // Resources
     int totalCPUs;

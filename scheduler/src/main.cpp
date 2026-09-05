@@ -46,9 +46,16 @@ WorkerInfo parseRegistration(std::string message) {
 
     // Assign appropriate variables in info struct
     info.workerID = workerID;
-    info.availableCPUs = std::stoi(cpu);
-    info.availableGPUs = std::stoi(gpu);
-    info.availableMem = std::stoi(mem);
+
+    info.totalCPUs = std::stoi(cpu);
+    info.availableCPUs = info.totalCPUs;
+
+    info.totalGPUs = std::stoi(gpu);
+    info.availableGPUs = info.totalGPUs;
+
+    info.totalMem = std::stoi(mem);
+    info.availableMem = info.totalMem;
+
     info.state = WorkerState::Idle;
 
     // Return struct
@@ -106,7 +113,7 @@ int main() {
     // Wait for expected workers
     std::cout << "Waiting for " << benchmark.getExpectedWorkers() << " workers...\n";
 
-    // Register workers first
+    // Register workers first /// CHANGE THIS 1 TO benchmark.getExpectedWorkers() later
     while (scheduler.workerCount() < benchmark.getExpectedWorkers()) {
 
         // Check for new worker
