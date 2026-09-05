@@ -168,7 +168,7 @@ int Job::getRequiredGPUs() const {
 }
 
 // Get requiredMem
-int Job::getRequiredMem() const {
+size_t Job::getRequiredMem() const {
 
     return requiredMem;
 

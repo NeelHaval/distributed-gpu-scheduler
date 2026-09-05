@@ -2,6 +2,7 @@
 #include <utility>
 #include <iostream>
 #include "Benchmark.h"
+#include <limits>
 
 // Constructor to initialise private variables
 Scheduler::Scheduler()
@@ -373,6 +374,10 @@ void Scheduler::schedule() {
 // Return chosen worker
 WorkerInfo* Scheduler::findAvailableWorker(const Job& job) {
 
+    // Worker to store best scoring worker
+    WorkerInfo* bestWorker = nullptr;
+    double bestScore = std::numeric_limits<double>::max();
+
     // Iterate through registeredWorkers to find suitable worker
     for (auto& [workerID, worker] : registeredWorkers) {
 /*
@@ -399,20 +404,53 @@ WorkerInfo* Scheduler::findAvailableWorker(const Job& job) {
           << "\n";
         // TRIAL
 
-        // If worker is free
-        if (worker.availableCPUs >= job.getRequiredCPUs() &&
-            worker.availableGPUs >= job.getRequiredGPUs() &&
-            worker.availableMem >= job.getRequiredMem()) {
+        // If worker has insufficient resources check other workers
+        if (worker.availableCPUs < job.getRequiredCPUs() ||
+            worker.availableGPUs < job.getRequiredGPUs() ||
+            worker.availableMem < job.getRequiredMem()) {
 
-            // Must return a pointer
-            return& worker;
+           continue;
 
+        }
+
+        // Score all feasable workers
+        double score = scoreWorker(worker, job);
+
+        // Print to terminal
+        std::cout << "Worker" << workerID << " score = " << score << "\n";
+
+        // Lower scores point towards tighter fit
+        if (score < bestScore) {
+
+            bestScore = score;
+            bestWorker = &worker;
+            
         }
 
     }
 
     // No suitable worker exists
-    return nullptr;
+    return bestWorker;
+
+}
+
+// Scoring function to assess how well a worker fits a job
+double Scheduler::scoreWorker(const WorkerInfo& worker, const Job& job) const {
+
+    // Measure of free CPU resources after accepting job
+    double cpuSlack = static_cast<double>(worker.availableCPUs - job.getRequiredCPUs())
+                                            / worker.totalCPUs;
+
+    // Measure of free GPU resources after accepting job
+    double gpuSlack = static_cast<double>(worker.availableGPUs - job.getRequiredGPUs())
+                                            / worker.totalGPUs;
+
+    // Measure of free Memory resources after accepting job
+    double memSlack = static_cast<double>(worker.availableMem - job.getRequiredMem())
+                                            / worker.totalMem;
+
+    // Return score
+    return cpuSlack + gpuSlack + memSlack;
 
 }
 

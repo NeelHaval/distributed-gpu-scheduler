@@ -62,7 +62,7 @@ class Job {
     // Resources getter
     int getRequiredCPUs() const;
     int getRequiredGPUs() const;
-    int getRequiredMem() const;
+    size_t getRequiredMem() const;
 
     // Get current workerID
     std::string getWorkerID() const;

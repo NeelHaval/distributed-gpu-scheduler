@@ -412,6 +412,35 @@ $$
 
 The formula above gives a clear scheduling efficiency at this stage. Once workers support multiple concurrent jobs, instantaneous utilisation may be considered to investigate finer behaviour on a worker by worker basis. The two metrics are compatible: Cluster - level utilisation is the time averaged form of instantaneous utilisation, so this early metric shown above is a useful baseline for future comparisons with instantaneous worker utilisation.
 
+## 05/09/2026
+
+### Worker Conurrency Overview: <br>
+
+The worker executes jobs concurrently using multiple threads. Shared state is
+protected with mutexes to prevent race conditions. <br>
+
+### Threading model: <br>
+
+Each job runs inside its own background thread. Threads are stored in jobThreads
+so the worker can track and manage them instead of detaching. <br>
+
+### Shared State protection: <br>
+
+- resourceMutex - guards access to shared worker state (its CPU/GPU/MEM/activeJobIDs/
+workerStatus).
+
+- sendMutex - ensures only one thread writes to the TCP connection at a time, 
+preventing interleaved messages. <br>
+
+### Job Execution Flow: <br>
+
+1. Thread starts and locks resourceMutex.
+2. Resources are checked and assigned; job ID is added to the activeJobIDs.
+3. Mutex scope ends = resources are unlocked.
+4. Thread sends a "STARTED" message using sendMutex.
+5. Job runs concurrently (simulated with sleep as of date).
+6. On Completion, resources are freed and job ID is removed from activeJobIDs.
+
 ## Ongoing decisions:
 
 - C++ networking library?

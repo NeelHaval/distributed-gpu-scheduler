@@ -49,6 +49,9 @@ class Scheduler {
     // Return chosen worker
     WorkerInfo* findAvailableWorker(const Job& job);
 
+    // Scoring function to assess how well a worker fits a job
+    double scoreWorker(const WorkerInfo& worker, const Job& job) const;
+
     // Required for testing
     size_t queueSize() const;
     int workerCount() const;
