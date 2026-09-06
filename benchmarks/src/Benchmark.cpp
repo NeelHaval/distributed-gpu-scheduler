@@ -3,9 +3,18 @@
 #include <iomanip>
 
 // Constructor for benchmark
-Benchmark::Benchmark(int expectedWorkers)
+Benchmark::Benchmark(int expectedWorkers, int totalCPUsPerWorker, int totalGPUsPerWorker,
+              size_t totalMemPerWorker)
 
-    : expectedWorkers(expectedWorkers)
+    : 
+    
+    expectedWorkers(expectedWorkers),
+    totalCPUsPerWorker(totalCPUsPerWorker),
+    totalGPUsPerWorker(totalGPUsPerWorker),
+    totalMemPerWorker(totalMemPerWorker),
+    cpuUsage(0.0),
+    gpuUsage(0.0),
+    memoryUsage(0.0)
 
     {
 
@@ -33,9 +42,16 @@ double Benchmark::getElapsedMilliseconds() const {
 }
 
 // Calculate the job execution time
-void Benchmark::recordJobTime(const std::string& jobID, double durationMs) {
+void Benchmark::recordJobTime(const std::string& jobID, double durationMs, int requiredCPUs,
+                       int requiredGPUs, size_t requiredMem) {
 
     jobTimes.push_back(durationMs);
+
+    cpuUsage += static_cast<double>(requiredCPUs) * durationMs;
+
+    gpuUsage += static_cast<double>(requiredGPUs) * durationMs;
+
+    memoryUsage += static_cast<double>(requiredMem) * durationMs;
 
 }
 
@@ -101,8 +117,16 @@ void Benchmark::printResult(const std::string& workloadName, int completedJobs) 
               << getThroughput(completedJobs)
               << " jobs/second\n";
 
-    std::cout << "Worker utilisation: "
-              << getWorkerUtil()
+    std::cout << "CPU utilisation: "
+              << getCPUUtil()
+              << " %\n";
+
+    std::cout << "GPU utilisation: "
+              << getGPUUtil()
+              << " %\n";
+
+    std::cout << "Memory utilisation: "
+              << getMemoryUtil()
               << " %\n";
 
     std::cout << "Average queueing time: "
@@ -113,38 +137,74 @@ void Benchmark::printResult(const std::string& workloadName, int completedJobs) 
 
 }
 
-// Get cluster level worker utilisation
-double Benchmark::getWorkerUtil() const {
+// Get resource - level worker utilisation
+double Benchmark::getCPUUtil() const {
 
-    // In case of error with input
-    if (expectedWorkers <= 0) {
-
-        return 0.0;
-
-    }
-
-    // Variable to record cumulative working time for all workers
-    double totalWorkerBusyTime = 0.0;
-
-    // Calculate total busy worker time
-    for (double jobTime : jobTimes) {
-
-        totalWorkerBusyTime += jobTime;
-
-    }
-
-    double totalAvailableWorkerTime = expectedWorkers * getElapsedMilliseconds();
-
-    // If total available worker <= 0.0, then error has occured
-    if (totalAvailableWorkerTime <= 0.0) {
+    // Check for errors
+    if (expectedWorkers <= 0 || totalCPUsPerWorker <= 0) {
 
         return 0.0;
 
     }
 
-    // Otherwise return utilisation (%)
-    return (totalWorkerBusyTime / totalAvailableWorkerTime) * 100.0;
+    // Total CPU time
+    double totalAvailableCPUTime = static_cast<double>(expectedWorkers) * totalCPUsPerWorker
+                                    * getElapsedMilliseconds();
 
+    if (totalAvailableCPUTime <= 0.0) {
+
+        return 0.0;
+
+    }
+
+    // Return benchmark metric
+    return (cpuUsage / totalAvailableCPUTime) * 100.0;
+}
+
+double Benchmark::getGPUUtil() const {
+
+    // Check for errors
+    if (expectedWorkers <= 0 || totalGPUsPerWorker <= 0) {
+
+        return 0.0;
+
+    }
+
+    // Total GPU time
+    double totalAvailableGPUTime = static_cast<double>(expectedWorkers) * totalGPUsPerWorker
+        * getElapsedMilliseconds();
+
+    if (totalAvailableGPUTime <= 0.0) {
+
+        return 0.0;
+
+    }
+
+    // Return benchmark metric
+    return (gpuUsage / totalAvailableGPUTime) * 100.0;
+}
+
+double Benchmark::getMemoryUtil() const {
+
+    // Check for errors
+    if (expectedWorkers <= 0 || totalMemPerWorker == 0) {
+
+        return 0.0;
+
+    }
+
+    // Total Memory time
+    double totalAvailableMemoryTime = static_cast<double>(expectedWorkers) * static_cast<double>(totalMemPerWorker)
+        * getElapsedMilliseconds();
+
+    if (totalAvailableMemoryTime <= 0.0) {
+
+        return 0.0;
+
+    }
+
+    // Return benchmark metric
+    return (memoryUsage / totalAvailableMemoryTime) * 100.0;
 }
 
 // Record the queueing time for a job

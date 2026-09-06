@@ -441,6 +441,27 @@ preventing interleaved messages. <br>
 5. Job runs concurrently (simulated with sleep as of date).
 6. On Completion, resources are freed and job ID is removed from activeJobIDs.
 
+## 06/09/2026
+
+The following is the output at terminal following the benchmarking analysis
+of the scheduler before and after phase 4; the addition of concurrent job execution
+by workers and a best fit (smarter) scheduling policy. This is a clear improvement over the last implementation where each worker executed one job, and a first fit 
+scheduling policy was in place.
+
+Table:
+
+### FIRST FIT vs BEST FIT
+
+| Metric           | First-Fit | Upgraded |  Change |
+| :--------------- | --------: | -------: | ------: |
+| Makespan         |  27193.67 | 15970.55 | -41.27% |
+| Average Job Time |   1066.12 |   960.78 |  -9.88% |
+| Throughput       |      3.68 |     6.27 |  70.53% |
+| Queueing Time    |  12930.54 |  6389.63 | -50.59% |
+
+Note that the above is just one run. It is however representative of the average set of
+results obtained across 10 runs of benchmarking the first fit and best fit schedulers.
+
 ## Ongoing decisions:
 
 - C++ networking library?

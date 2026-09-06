@@ -2,6 +2,7 @@
 #include <chrono>
 #include <string>
 #include <vector>
+#include <cstddef>
 
 // Create Benchmark class
 class Benchmark {
@@ -10,7 +11,8 @@ class Benchmark {
 public:
 
     // Constructor for benchmark object
-    Benchmark(int expectedWorkers);
+    Benchmark(int expectedWorkers, int totalCPUsPerWorker, int totalGPUsPerWorker,
+              size_t totalMemPerWorker);
 
     // Mark start time
     void start();
@@ -28,7 +30,8 @@ public:
     int getExpectedWorkers() const;
 
     // Calculate the job execution time
-    void recordJobTime(const std::string& jobID, double durationMs);
+    void recordJobTime(const std::string& jobID, double durationMs, int requiredCPUs,
+                       int requiredGPUs, size_t requiredMem);
 
     // Calculate average job execution metric
     double getAverageJobTime() const;
@@ -36,8 +39,10 @@ public:
     // Get the throughput
     double getThroughput(int completedJobs) const;
 
-    // Get cluster level worker utilisation
-    double getWorkerUtil() const;
+    // Get instantaneous worker utilisation
+    double getCPUUtil() const;
+    double getGPUUtil() const;
+    double getMemoryUtil() const;
 
     // Record the queueing time for a job
     void recordQueueTime(const std::string& jobID, double durationMs);
@@ -60,5 +65,13 @@ private:
 
     // Store queueing time for each job
     std::vector<double> queueTimes;
+
+    // Worker utilisation metrics
+    int totalCPUsPerWorker;
+    int totalGPUsPerWorker;
+    size_t totalMemPerWorker;
+    double cpuUsage;
+    double gpuUsage;
+    double memoryUsage;
 
 };

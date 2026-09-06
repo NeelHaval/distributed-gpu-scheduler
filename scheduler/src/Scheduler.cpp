@@ -158,9 +158,13 @@ void Scheduler::listenToWorkers() {
                     // Print execution time
                     std::cout << "Job execution time: " << durationMs << " ms\n";
 
-                    if (benchmark != nullptr) {
+                    // Get running job to access requirements
+                    auto jobIt = runningJobs.find(jobID);
 
-                        benchmark->recordJobTime(jobID, durationMs);
+                    if (benchmark != nullptr && jobIt != runningJobs.end()) {
+
+                        benchmark->recordJobTime(jobID, durationMs, jobIt->second.getRequiredCPUs(),
+                        jobIt->second.getRequiredGPUs(), jobIt->second.getRequiredMem());
 
                     }
 

@@ -105,7 +105,7 @@ int main() {
 
     // Start benchmark immediately before job submission
     // Makespan measures the total time required to process all jobs
-    Benchmark benchmark(4);
+    Benchmark benchmark(4, 8, 10, 16384);
 
     // Avoid creating a new benchmark object
     scheduler.setBenchmark(&benchmark);
