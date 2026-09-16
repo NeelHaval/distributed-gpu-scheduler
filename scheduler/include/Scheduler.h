@@ -63,6 +63,9 @@ class Scheduler {
     int getJobsSubmitted() const;
     int getJobsCompleted() const;
 
+    // Method to verify worker life
+    void checkWorkerHB();
+
     private:
 
     // Benchmark used to hold job execution times

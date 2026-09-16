@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include "WorkerState.h"
+#include <chrono>
 
 struct WorkerInfo {
 
@@ -18,5 +19,9 @@ struct WorkerInfo {
     WorkerState state;
     
     std::string currentJobID;
+
+    // Heartbeat book keeping
+    std::chrono::steady_clock::time_point lastHB;
+    int missedHBs;
 
 };

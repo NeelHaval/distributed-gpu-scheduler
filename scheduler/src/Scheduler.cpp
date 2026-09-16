@@ -91,6 +91,24 @@ void Scheduler::listenToWorkers() {
             // Print status
             std::cout << "Received from " << workerID << ": " << message << "\n";
 
+            // If heartbeat monitoring message received then handle appropriately
+            if (message.rfind("HEARTBEAT|", 0) == 0) {
+
+                auto workerIt = registeredWorkers.find(workerID);
+
+                // If the worker exists is registeredWorkers then update last
+                // heart beat
+                if (workerIt != registeredWorkers.end()) {
+
+                    workerIt->second.lastHB = std::chrono::steady_clock::now();
+
+                    // Print to show status
+                    std::cout << "HeartBeat received from " << workerID << "\n";
+
+                }
+
+            }
+
             // Handle job started message
             if (message.rfind("STARTED|", 0) == 0) {
 
@@ -384,16 +402,14 @@ WorkerInfo* Scheduler::findAvailableWorker(const Job& job) {
 
     // Iterate through registeredWorkers to find suitable worker
     for (auto& [workerID, worker] : registeredWorkers) {
-/*
-        // TRIAL
-        std::cout << "Worker "
-          << workerID
-          << " state = "
-          << static_cast<int>(worker.state)
-          << "\n";
-          // TRIAL
-*/
 
+        // If worker is offline then do not assign jobs to it
+        if (worker.state == WorkerState::Offline) {
+
+            continue;
+
+        }
+/*
         // TRIAL
         std::cout << "Worker resources: "
           << "CPU=" << worker.availableCPUs
@@ -407,7 +423,7 @@ WorkerInfo* Scheduler::findAvailableWorker(const Job& job) {
           << " MEM=" << job.getRequiredMem()
           << "\n";
         // TRIAL
-
+*/
         // If worker has insufficient resources check other workers
         if (worker.availableCPUs < job.getRequiredCPUs() ||
             worker.availableGPUs < job.getRequiredGPUs() ||
@@ -421,7 +437,7 @@ WorkerInfo* Scheduler::findAvailableWorker(const Job& job) {
         double score = scoreWorker(worker, job);
 
         // Print to terminal
-        std::cout << "Worker" << workerID << " score = " << score << "\n";
+//      std::cout << "Worker" << workerID << " score = " << score << "\n";
 
         // Lower scores point towards tighter fit
         if (score < bestScore) {
@@ -502,5 +518,36 @@ int Scheduler::getJobsSubmitted() const {
 int Scheduler::getJobsCompleted() const {
 
     return jobsCompleted;
+
+}
+
+// Method to verify worker life
+void Scheduler::checkWorkerHB() {
+
+    // Obtain current time
+    auto now = std::chrono::steady_clock::now();
+
+    // For every registered worker get the elapsed time since their last
+    // outgoing heartbeat
+    for (auto& [workerID, worker] : registeredWorkers) {
+
+        auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(
+
+            now - worker.lastHB
+
+        ).count();
+
+        // If elapsed time since last heart beat is greater than 3 seconds
+        // mark worker offline
+        if (elapsed > 3 && worker.state != WorkerState::Offline) {
+
+            // Unresponsive worker
+            worker.state = WorkerState::Offline;
+
+            std::cout <<"Worker " << workerID << " marked OFFLINE\n";
+
+        }
+
+    }
 
 }

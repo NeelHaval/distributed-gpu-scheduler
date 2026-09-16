@@ -31,7 +31,7 @@ Hearbeats
 
 Failure recovery
 
-## Phase 6.5:
+## Phase 6.5 (Fault Injection):
 
 Testing and Refactoring
 
@@ -48,4 +48,3 @@ Metrics and benchmarking
 
 GPU - aware placement
 NUMA - aware placement
-Fault injection

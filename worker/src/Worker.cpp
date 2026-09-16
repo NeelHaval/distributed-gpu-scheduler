@@ -276,6 +276,13 @@ void Worker::stop() {
     // Officially disconnect from the scheduler
     client.disconnect();
 
+    // Close heartbeat thread
+    if (HBThread.joinable()) {
+
+        HBThread.join();
+
+    }
+
     // Finish all job threads
     for (std::thread& thread : jobThreads) {
 
@@ -296,5 +303,43 @@ void Worker::stop() {
 bool Worker::isRunning() const {
 
     return running;
+
+}
+
+// Start the heartbeat thread
+void Worker::startHB() {
+
+    HBThread = std::thread(&Worker::HBloop, this);
+
+}
+
+// Send heartbeats
+void Worker::HBloop() {
+
+    while (running) {
+
+        // Only if the heartbeat flag for this specific worker is enabled
+        // send the message
+        if (heartbeat) {
+
+            // Signal heartbeat by sending message
+            sendMessage("HEARTBEAT|" + workerID);
+
+        }
+
+        // Send hearbeat at 1 second intervals
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+
+    }
+
+    std::cout << "Heartbeat thread stopping for "
+              << workerID << "\n";
+
+}
+
+// Set heartbeats
+void Worker::setHB(bool mark) {
+
+    heartbeat = mark;
 
 }

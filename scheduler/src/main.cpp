@@ -58,6 +58,10 @@ WorkerInfo parseRegistration(std::string message) {
 
     info.state = WorkerState::Idle;
 
+    // Keep track of initial heart beat parameters
+    info.lastHB = std::chrono::steady_clock::now();
+    info.missedHBs = 0;
+
     // Return struct
     return info;
 
@@ -182,55 +186,11 @@ int main() {
     // Keep listening for new workers
     while (scheduler.getJobsCompleted() < scheduler.getJobsSubmitted()) {
 
-// XXXX        std::cout << "Checking for incoming worker...\n";
-        /*
-        // Check for new worker
-        if (server.hasIncomingClient()) {
-
-            std::cout << "Incoming worker detected.\n";
-
-            // If present accept
-            Socket workerSocket = server.acceptClient();
-
-            // Print status message
-            std::cout << "Worker connected.\n";
-
-            // Receive registration
-            std::string message = workerSocket.receive();
-
-            // Print status
-            std::cout << "Received" << message.size() << " bytes.\n";
-
-            // Parse the registration message
-            WorkerInfo worker = parseRegistration(message);
-
-            // Fully register
-            scheduler.registerWorker(worker);
-
-            // TRIAL
-            std::cout << "REGISTERED WORKER: " << worker.workerID << "\n";
-            // TRIAL
-
-            // TRIAL
-            std::cout << "Accepted worker socket FD: "
-          << workerSocket.getFD()
-          << "\n";
-          // TRIAL
-
-            // Store the socket associated with workerID
-            scheduler.registerWorkerSocket(worker.workerID, std::move(workerSocket));
-
-            // TRIAL
-            std::cout << "REGISTERED SOCKET FOR: " << worker.workerID << "\n";
-            // TRIAL
-
-            // Print status
-            std::cout << "Registered worker: " << worker.workerID << "\n";
-
-        }
-        */
         // Continue checking for existing worker messages
         scheduler.listenToWorkers();
+
+        // Check last worker heartbeats
+        scheduler.checkWorkerHB();
 
         // Schedule waiting jobs
         scheduler.schedule();

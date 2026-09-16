@@ -19,6 +19,9 @@ void workerThread(Worker& worker) {
     // Register worker with scheduler
     worker.registerWorker();
 
+    // Begin the heartbeat thread
+    worker.startHB();
+
     // Worker stays alive after registering
     while (worker.isRunning()) {
 
@@ -74,6 +77,8 @@ int main() {
     Worker worker2("worker2", 8, 10, 16384);
     Worker worker3("worker3", 8, 10, 16384);
     Worker worker4("worker4", 8, 10, 16384);
+
+    // Workers may be marked offline for testing purposes
 
     // Start four threads
     std::thread t1(workerThread, std::ref(worker1));

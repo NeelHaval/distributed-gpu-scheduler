@@ -1,0 +1,1 @@
+Source 1 : https://www.systemdesignhandbook.com/guides/heartbeat-distributed-systems/

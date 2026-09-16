@@ -91,6 +91,15 @@ class Worker {
     // Check if a worker is currently running
     bool isRunning() const;
 
+    // Start heartbeat Thread
+    void startHB();
+
+    // Send heartbeats
+    void HBloop();
+
+    // Set heartbeats
+    void setHB(bool mark);
+
     /* 
     Later add these methods:
     sendHeartbeat()
@@ -122,6 +131,9 @@ class Worker {
     // Keep execution threads alive instead of detaching them
     std::vector<std::thread> jobThreads;
 
+    // Add heartbeat tracking thread
+    std::thread HBThread;
+
     // Control worker shut down
     std::atomic<bool> running{true};
 
@@ -142,10 +154,12 @@ class Worker {
     // Statics
     int jobsCompleted;
 
-    // Phase 6:
     // Increment when a job fails during execution.
     int jobsFailed;
     
     // Note that jobs executed is jobs failed + jobs completed
+
+    // Marker to enable or disable heartbeat
+    bool heartbeat = true;
 
 };
